@@ -12,6 +12,7 @@ import { newId } from "./lib/crypto.js";
 import { admin } from "./admin.js";
 import { pub } from "./public.js";
 import { runScheduler } from "./scheduler.js";
+import { REFERRAL_CAP } from "./referrals.js";
 import { quotes } from "./quotes.js";
 import { settings, account } from "./settings.js";
 
@@ -122,6 +123,14 @@ app.get("/api/cron", async (c) => {
   const given = (c.req.header("Authorization") ?? "").replace(/^Bearer\s+/i, "");
   if (!safeEqual(given, c.env.CRON_SECRET)) return c.json({ error: "Forbidden" }, 403);
   return c.json({ ok: true, ...(await runScheduler(c.env)) });
+});
+
+app.get("/api/referrals", guard, async (c) => {
+  const b = await c.env.DB.prepare("SELECT id, referral_code AS code, free_until AS freeUntil FROM businesses WHERE user_id = ?")
+    .bind(c.get("user")!.id).first<{ id: string; code: string; freeUntil: string }>();
+  if (!b) return c.json({ error: "No business found" }, 404);
+  const n = (await c.env.DB.prepare("SELECT COUNT(*) AS n FROM referrals WHERE referrer_business_id = ?").bind(b.id).first<{ n: number }>())?.n ?? 0;
+  return c.json({ code: b.code, link: `${c.env.APP_URL}/?ref=${b.code}`, credited: n, cap: REFERRAL_CAP, freeUntil: b.freeUntil });
 });
 
 app.route("/api", pub);

@@ -22,6 +22,7 @@ export default function AppShell({ children }: { children: ReactNode | ((me: Me)
           <nav aria-label="App" className="flex gap-2 mb-6 overflow-x-auto pb-1">
             <NavLink to="/app" end className={tab}>Quotes</NavLink>
             <NavLink to="/app/new" className={tab}>Add quote</NavLink>
+            <NavLink to="/app/refer" className={tab}>Refer a friend</NavLink>
             <NavLink to="/app/settings" className={tab}>Settings</NavLink>
           </nav>
           {typeof children === "function" ? children(me) : children}

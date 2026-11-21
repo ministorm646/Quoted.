@@ -24,7 +24,7 @@ export function buildEnv(): Env {
     SESSION_SECRET: e.SESSION_SECRET!,
     TURNSTILE_SECRET: e.TURNSTILE_SECRET!,
     TURNSTILE_SITE_KEY: e.TURNSTILE_SITE_KEY!,
-    PRODUCT_NAME: e.PRODUCT_NAME || "QuoteNudge",
+    PRODUCT_NAME: e.PRODUCT_NAME || "QuoteMe",
     APP_URL: appUrl().replace(/\/$/, ""),
     FROM_EMAIL: e.FROM_EMAIL!,
     ADMIN_EMAIL: e.ADMIN_EMAIL!,

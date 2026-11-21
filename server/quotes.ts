@@ -5,6 +5,9 @@ import { guard, hit, readJson } from "./lib/security.js";
 import { newId, randomToken } from "./lib/crypto.js";
 import { cleanEmail, cleanText, nowIso, parsePounds } from "./lib/util.js";
 import { DEFAULT_SCHEDULE } from "./lib/template.js";
+import { creditReferral } from "./referrals.js";
+import { sendEmail } from "./lib/email.js";
+import { followupMail } from "./lib/followup.js";
 
 export const quotes = new Hono<HC>();
 
@@ -78,6 +81,9 @@ quotes.post("/", async (c) => {
     ).bind(id, biz.id, clientName, clientEmail, amountPence, description, iso, next, randomToken(24), first, iso, iso),
     c.env.DB.prepare("INSERT INTO events (quote_id, type, created_at) VALUES (?, 'created', ?)").bind(id, iso),
   ]);
+  if (first) {
+    try { await creditReferral(c.env.DB, biz.id); } catch (e) { console.error("referral credit failed", String(e)); }
+  }
   const unsub = await c.env.DB.prepare("SELECT 1 AS x FROM unsubscribes WHERE email = ?").bind(clientEmail).first();
   return c.json({ ok: true, id, unsubscribed: !!unsub });
 });
@@ -150,4 +156,19 @@ quotes.delete("/:id", async (c) => {
     c.env.DB.prepare("DELETE FROM quotes WHERE id = ? AND business_id = ?").bind(id, c.get("biz")!.id),
   ]);
   return del.meta.changes === 1 ? c.json({ ok: true }) : c.json({ error: "Quote not found" }, 404);
+});
+
+// Sends the real follow-up email for this quote to the owner's own address, so they can see it
+// and try the buttons. The client is never emailed. Tapping a button changes the real quote.
+quotes.post("/:id/test", async (c) => {
+  const user = c.get("user")!;
+  if (!(await hit(c.env, `qt:${user.id}`, 10, 3600))) return c.json({ error: "That is a lot of test emails. Try again later." }, 429);
+  const q = await c.env.DB.prepare(
+    `SELECT q.client_name, q.client_email, q.description, q.response_token, b.name AS bname, b.reply_to, b.template
+     FROM quotes q JOIN businesses b ON b.id = q.business_id WHERE q.id = ? AND q.business_id = ?`,
+  ).bind(c.req.param("id"), c.get("biz")!.id).first<Parameters<typeof followupMail>[1]>();
+  if (!q) return c.json({ error: "Quote not found" }, 404);
+  const mail = followupMail(c.env, q, 1);
+  const r = await sendEmail(c.env, { ...mail, to: user.email, subject: `[Test] ${mail.subject}` });
+  return r.ok ? c.json({ ok: true, to: user.email, dryRun: !!r.dryRun }) : c.json({ error: "The test email could not be sent." }, 502);
 });

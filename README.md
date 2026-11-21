@@ -1,4 +1,4 @@
-# QuoteNudge on Vercel (working name)
+# QuoteMe (working name) on Vercel
 
 Follow-ups for quotes that go quiet. Vite + React site, one Hono API served by a single Vercel Function, Turso (SQLite) database, Cloudflare Turnstile, Resend.
 
@@ -10,7 +10,9 @@ Follow-ups for quotes that go quiet. Vite + React site, one Hono API served by a
     server/lib/                  accounts.ts, crypto.ts, email.ts, security.ts, template.ts, util.ts
     src/                         main.tsx, api.ts, lib.ts, index.css
     src/components/              AppShell.tsx, Celebrate.tsx, Shell.tsx, StatusBadge.tsx, Turnstile.tsx
-    src/pages/                   AddQuote.tsx, Admin.tsx, Dashboard.tsx, Landing.tsx, QuoteDetail.tsx, Settings.tsx, SignIn.tsx, Verify.tsx
+    src/pages/                   AddQuote, Admin, AdminStats, Dashboard, Landing, Privacy, QuoteDetail, Refer, Respond, Settings, SignIn, Unsubscribe, Verify (.tsx)
+    public/                      manifest.webmanifest, icons, favicon.svg
+    tests/ and docs/             automated tests; setup and compliance guides
 
 The repo must have package.json and vercel.json at its top level, not inside a subfolder.
 
@@ -24,7 +26,12 @@ Open /api/health on your site: {"ok":true} means setup is complete. If it says "
 - DRY_RUN=true (the default) logs emails, including sign-in links, to Vercel's runtime logs instead of sending them. Set DRY_RUN=false once Resend is ready.
 - Vercel's Hobby plan is for non-commercial use and allows cron jobs only once a day. The follow-up scheduler (Phase 3) needs something that runs every 15 minutes: Vercel Pro cron, or an outside scheduler that calls the API.
 
-## Follow-up scheduler (Phase 3)
+## Guides
+
+- docs/SETUP.md: step-by-step setup, testing, domain, Resend, timer and going live.
+- docs/COMPLIANCE.md: lawful basis and unsubscribe handling.
+
+## Follow-up scheduler
 
 - /api/cron runs the scheduler. It needs the setting CRON_SECRET and the header `Authorization: Bearer <CRON_SECRET>`. Vercel Cron sends that header itself.
 - vercel.json asks Vercel to call it once a day (the most the Hobby plan allows). For every 15 minutes, add a free outside timer (for example cron-job.org) that calls https://YOUR-SITE/api/cron with that header, or use Vercel Pro.

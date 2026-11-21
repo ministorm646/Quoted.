@@ -20,6 +20,14 @@ function View() {
   const [party, setParty] = useState(false);
   const dlg = useRef<HTMLDialogElement>(null);
   const done = useCallback(() => setParty(false), []);
+  const [note, setNote] = useState("");
+  async function sendTest() {
+    setBusy(true); setNote(""); setError("");
+    const r = await api<{ to?: string; dryRun?: boolean; error?: string }>(`/api/quotes/${id}/test`, { method: "POST", body: {} });
+    setBusy(false);
+    if (!r.ok) return setError(r.data?.error ?? "That didn't work. Please try again.");
+    setNote(r.data.dryRun ? "Test mode is on, so the email was logged instead of sent. Your site settings say where to find it." : `Sent to ${r.data.to}. Open it and tap a button to see what your client sees. Tapping a button changes this quote.`);
+  }
 
   const load = useCallback(async () => {
     const r = await api<Detail>(`/api/quotes/${id}`);
@@ -63,6 +71,7 @@ function View() {
 
       {added && <p role="status" className="mt-4 font-medium">Saved. We'll follow this one up for you.</p>}
       {d.unsubscribed && <p role="status" className="mt-4 font-medium">This person has unsubscribed from emails, so no follow-ups will be sent.</p>}
+      {note && <p role="status" className="mt-4 font-medium">{note}</p>}
       {error && <p role="alert" className="mt-4 text-error font-medium">{error}</p>}
 
       <div className="mt-5 flex flex-wrap gap-2">
@@ -70,6 +79,7 @@ function View() {
         {open && <button className="btn btn-outline" disabled={busy} onClick={() => act("/lost")}>Mark as lost</button>}
         {["waiting", "following_up"].includes(q.status) && <button className="btn btn-outline" disabled={busy} onClick={() => act("/pause")}>Pause follow-ups</button>}
         {q.status === "paused" && <button className="btn btn-outline" disabled={busy} onClick={() => act("/resume")}>Resume follow-ups</button>}
+        <button className="btn btn-outline" disabled={busy} onClick={sendTest}>Email me a test</button>
         <button className="btn btn-ghost text-error" disabled={busy} onClick={() => dlg.current?.showModal()}>Delete</button>
       </div>
 

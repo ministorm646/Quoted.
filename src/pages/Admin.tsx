@@ -33,7 +33,7 @@ export default function Admin() {
   const badge = (s: string) => s === "approved" ? "badge-success" : s === "rejected" ? "badge-neutral" : "badge-warning";
 
   return (
-    <Shell nav={<Link to="/app" className="btn btn-sm btn-outline">Back to app</Link>}>
+    <Shell nav={<><Link to="/admin/stats" className="btn btn-sm btn-outline">Stats</Link><Link to="/app" className="btn btn-sm btn-ghost">Back to app</Link></>}>
       <div className="flex flex-wrap items-end justify-between gap-3">
         <h1 className="text-3xl font-extrabold">Early-access requests</h1>
         <p className="font-bold">Seats used: <span className="hl">{data.seats.used} of {data.seats.cap}</span></p>

@@ -18,7 +18,7 @@ function Header() {
   return (
     <header className="sticky top-0 z-20 bg-white border-b-2 border-[#10231c]">
       <div className="mx-auto max-w-5xl px-4 h-16 flex items-center justify-between">
-        <Link to="/" className="font-display font-extrabold text-xl">{cfg?.name ?? "QuoteNudge"}</Link>
+        <Link to="/" className="font-display font-extrabold text-xl">{cfg?.name ?? "QuoteMe"}</Link>
         <nav className="hidden md:flex items-center gap-5" aria-label="Main">
           {LINKS.map(([h, l]) => <a key={h} href={h} className="font-medium hover:underline">{l}</a>)}
           <Link to="/signin" className="btn btn-sm btn-outline">Sign in</Link>

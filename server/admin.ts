@@ -4,6 +4,7 @@ import { adminOnly, guard } from "./lib/security.js";
 import { createUserWithBusiness, makeLoginToken, seatCap, seatsUsed } from "./lib/accounts.js";
 import { sendEmail, signInEmail } from "./lib/email.js";
 import { nowIso } from "./lib/util.js";
+import { loadStats } from "./stats.js";
 
 export const admin = new Hono<HC>();
 admin.use("*", guard, adminOnly);
@@ -21,6 +22,8 @@ admin.get("/waitlist", async (c) => {
   });
   return c.json({ items, seats: { used: await seatsUsed(c.env), cap: seatCap(c.env) } });
 });
+
+admin.get("/stats", async (c) => c.json(await loadStats(c.env.DB, c.env.ADMIN_EMAIL.trim().toLowerCase())));
 
 admin.post("/waitlist/:id/approve", async (c) => {
   const env = c.env;

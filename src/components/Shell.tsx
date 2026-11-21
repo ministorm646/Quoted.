@@ -11,7 +11,7 @@ export default function Shell({ children, nav, brandTo = "/", header, wide }: {
       {header ?? (
         <header className="border-b-2 border-[#10231c] bg-white sticky top-0 z-10">
           <div className="mx-auto max-w-5xl px-4 h-16 flex items-center justify-between">
-            <Link to={brandTo} className="font-display font-extrabold text-xl">{cfg?.name ?? "QuoteNudge"}</Link>
+            <Link to={brandTo} className="font-display font-extrabold text-xl">{cfg?.name ?? "QuoteMe"}</Link>
             <nav className="flex items-center gap-2">{nav ?? <Link to="/signin" className="btn btn-sm btn-outline">Sign in</Link>}</nav>
           </div>
         </header>

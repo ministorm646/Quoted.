@@ -1,0 +1,30 @@
+# Lawful basis and unsubscribes (UK GDPR and PECR)
+
+This is a working note, not legal advice. Have it checked before real customers use the service.
+
+## Who is who
+- The business using the service decides whom to follow up and why. The service sends emails on its behalf.
+- Review whether you are the controller or a processor for client data, and set your contracts and privacy page to match.
+
+## Lawful basis
+- Early-access requests: consent (the person submits the form). Only invite and sign-in emails are ever sent to them.
+- Business accounts: contract (providing the service they asked for).
+- Follow-ups to a business's clients: the business's legitimate interest in answering a quote the client asked for. Keep a record of this assessment.
+
+## PECR (email marketing rules)
+- Follow-ups are about the client's own quote request, not marketing. Keep the wording to that quote only.
+- Sole traders and partnerships are treated as individuals under PECR, so every email has a working unsubscribe link and honouring it is immediate.
+- Do not add promotional content to the follow-up template.
+
+## Unsubscribe handling
+- Every follow-up has an unsubscribe link and a List-Unsubscribe header. The link opens a confirm page (so mail scanners cannot unsubscribe people by accident). Confirming adds the address to a service-wide list and pauses all of that address's open quotes.
+- The scheduler checks that list before every send. An unsubscribed address is never emailed, whichever business logs a quote for it.
+- The unsubscribe list keeps only the email address and the date, as a suppression list. It is not removed when a business deletes its account, because removing it would allow emailing that person again. Say so in the privacy page.
+
+## Data kept and deleting it
+- Stored: client name and email, amount, one-line job description, event history, sign-in and rate-limit records.
+- Account deletion (Settings) removes the business, its quotes and history, and sign-in records.
+
+## Other things to check
+- Register with the ICO and pay the data protection fee if you are required to.
+- Have a data processing agreement with the hosting, database and email providers.
