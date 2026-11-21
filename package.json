@@ -4,7 +4,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build"
+    "build": "vite build",
+    "test": "tsc -p tsconfig.test.json && node --no-warnings --test .test-out/tests/scheduler.test.js"
   },
   "engines": {
     "node": ">=20"

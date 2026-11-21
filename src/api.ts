@@ -17,7 +17,7 @@ export async function api<T = any>(path: string, opts: { method?: string; body?:
   return { ok: res.ok, status: res.status, data: data as T };
 }
 
-export type Config = { name: string; turnstileSiteKey: string };
+export type Config = { name: string; turnstileSiteKey: string; contactEmail: string };
 let cfgPromise: Promise<Config> | null = null;
 export function useConfig(): Config | null {
   const [cfg, setCfg] = useState<Config | null>(null);

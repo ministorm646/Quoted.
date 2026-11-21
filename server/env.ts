@@ -31,5 +31,6 @@ export function buildEnv(): Env {
     DRY_RUN: dryRun(),
     SEAT_CAP: e.SEAT_CAP ?? "30",
     DAILY_SEND_CAP: e.DAILY_SEND_CAP ?? "80",
+    CRON_SECRET: e.CRON_SECRET ?? "",
   };
 }

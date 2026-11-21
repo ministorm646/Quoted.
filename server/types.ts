@@ -13,6 +13,7 @@ export interface Env {
   DRY_RUN: string;
   SEAT_CAP: string;
   DAILY_SEND_CAP: string;
+  CRON_SECRET: string;
 }
 export type SessionUser = { id: string; email: string };
 export type HC = {

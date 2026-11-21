@@ -23,3 +23,9 @@ Open /api/health on your site: {"ok":true} means setup is complete. If it says "
 
 - DRY_RUN=true (the default) logs emails, including sign-in links, to Vercel's runtime logs instead of sending them. Set DRY_RUN=false once Resend is ready.
 - Vercel's Hobby plan is for non-commercial use and allows cron jobs only once a day. The follow-up scheduler (Phase 3) needs something that runs every 15 minutes: Vercel Pro cron, or an outside scheduler that calls the API.
+
+## Follow-up scheduler (Phase 3)
+
+- /api/cron runs the scheduler. It needs the setting CRON_SECRET and the header `Authorization: Bearer <CRON_SECRET>`. Vercel Cron sends that header itself.
+- vercel.json asks Vercel to call it once a day (the most the Hobby plan allows). For every 15 minutes, add a free outside timer (for example cron-job.org) that calls https://YOUR-SITE/api/cron with that header, or use Vercel Pro.
+- Emails only go out between 8am and 7pm UK time. Run the tests with `npm test`.

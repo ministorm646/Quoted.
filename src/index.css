@@ -39,7 +39,11 @@
   --font-sans: "Public Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 
-html { background: #f4f6f3; }
+html { background: #f4f6f3; color-scheme: light; }
+/* Always light, even if the phone is in dark mode. */
+.input, .select, .textarea { background-color: #ffffff; color: #10231c; border-color: #10231c; }
+.input::placeholder, .textarea::placeholder { color: #6b7c74; opacity: 1; }
+details > summary { cursor: pointer; }
 body { font-family: var(--font-sans); color: #10231c; -webkit-font-smoothing: antialiased; }
 h1, h2, h3 { font-family: var(--font-display); letter-spacing: -0.01em; }
 

@@ -4,16 +4,18 @@ import type { HC } from "./types.js";
 import {
   endSession, guard, hit, isAdminEmail, loadSession, originCheck, readJson, startSession, verifyTurnstile,
 } from "./lib/security.js";
-import { hmacHash } from "./lib/crypto.js";
+import { hmacHash, safeEqual } from "./lib/crypto.js";
 import { cleanEmail, cleanText, clientIp, nowIso } from "./lib/util.js";
 import { createUserWithBusiness, makeLoginToken } from "./lib/accounts.js";
 import { sendEmail, signInEmail } from "./lib/email.js";
 import { newId } from "./lib/crypto.js";
 import { admin } from "./admin.js";
+import { pub } from "./public.js";
+import { runScheduler } from "./scheduler.js";
 import { quotes } from "./quotes.js";
 import { settings, account } from "./settings.js";
 
-const TRADES = ["cleaning", "building", "landscaping", "removals", "agency", "other"];
+const TRADES = ["cleaning", "building", "landscaping", "removals", "plumbing", "electrical", "roofing", "decorating", "handyman", "agency", "other"];
 const NEUTRAL = "If you have access, we've emailed you a link.";
 
 const app = new Hono<HC>();
@@ -24,7 +26,7 @@ app.use("*", originCheck, loadSession);
 app.get("/api/health", (c) => c.json({ ok: true }));
 
 app.get("/api/config", (c) =>
-  c.json({ name: c.env.PRODUCT_NAME, turnstileSiteKey: c.env.TURNSTILE_SITE_KEY }));
+  c.json({ name: c.env.PRODUCT_NAME, turnstileSiteKey: c.env.TURNSTILE_SITE_KEY, contactEmail: c.env.FROM_EMAIL }));
 
 // Early-access request. Always answers the same way, so nobody can probe the list.
 app.post("/api/waitlist", async (c) => {
@@ -102,6 +104,15 @@ app.get("/api/me", guard, async (c) => {
   return c.json({ email: u.email, isAdmin: isAdminEmail(c.env, u.email), csrf: c.get("csrf"), business });
 });
 
+// Called by Vercel Cron or an outside timer. Needs: Authorization: Bearer <CRON_SECRET>
+app.get("/api/cron", async (c) => {
+  if (!c.env.CRON_SECRET) return c.json({ error: "Cron is not set up. Add CRON_SECRET." }, 503);
+  const given = (c.req.header("Authorization") ?? "").replace(/^Bearer\s+/i, "");
+  if (!safeEqual(given, c.env.CRON_SECRET)) return c.json({ error: "Forbidden" }, 403);
+  return c.json({ ok: true, ...(await runScheduler(c.env)) });
+});
+
+app.route("/api", pub);
 app.route("/api/admin", admin);
 app.route("/api/quotes", quotes);
 app.route("/api/settings", settings);

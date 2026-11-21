@@ -3,7 +3,7 @@ import { escapeHtml } from "./util.js";
 
 export type Mail = {
   to: string; subject: string; text: string; html: string;
-  replyTo?: string; fromName?: string;
+  replyTo?: string; fromName?: string; headers?: Record<string, string>;
 };
 export type SendResult = { ok: boolean; dryRun?: boolean; error?: string };
 
@@ -22,6 +22,7 @@ export async function sendEmail(env: Env, m: Mail): Promise<SendResult> {
         from: `${name} <${env.FROM_EMAIL}>`,
         to: [m.to], subject: m.subject, html: m.html, text: m.text,
         ...(m.replyTo ? { reply_to: m.replyTo } : {}),
+        ...(m.headers ? { headers: m.headers } : {}),
       }),
     });
     if (!r.ok) {
