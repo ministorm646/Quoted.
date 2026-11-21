@@ -82,14 +82,26 @@ app.post("/api/auth/request", async (c) => {
 // so mail scanners that open links cannot burn it.
 app.post("/api/auth/verify", async (c) => {
   const b = await readJson(c);
-  if (!b || typeof b.token !== "string" || b.token.length > 100) return c.json({ error: "Invalid request" }, 400);
+  if (!b || typeof b.token !== "string" || b.token.length > 1000) return c.json({ error: "Invalid request" }, 400);
   if (!(await hit(c.env, `av:${clientIp(c)}`, 20, 900))) return c.json({ error: "Too many requests." }, 429);
+  // Keep only the token characters, so extra text copied after the link is ignored.
+  const token = b.token.match(/^[A-Za-z0-9_-]+/)?.[0] ?? "";
+  const hash = await hmacHash(c.env.SESSION_SECRET, token);
   const now = nowIso();
   const row = await c.env.DB.prepare(
     `UPDATE login_tokens SET used_at = ? WHERE token_hash = ? AND used_at IS NULL AND expires_at > ?
      RETURNING user_id`,
-  ).bind(now, await hmacHash(c.env.SESSION_SECRET, b.token), now).first<{ user_id: string }>();
-  if (!row) return c.json({ error: "This link has expired or was already used. Ask for a new one." }, 400);
+  ).bind(now, hash, now).first<{ user_id: string }>();
+  if (!row) {
+    // Say why (this only describes a token the visitor already holds) and log it for debugging.
+    const t = await c.env.DB.prepare("SELECT used_at, expires_at FROM login_tokens WHERE token_hash = ?")
+      .bind(hash).first<{ used_at: string | null; expires_at: string }>();
+    const why = !t ? "not found" : t.used_at ? "already used" : "expired";
+    console.log(`verify failed: ${why} (token length ${token.length}, expected 43)`);
+    const msg = !t ? "This link looks incomplete or has been changed. Copy the whole link with nothing extra, or ask for a new one."
+      : t.used_at ? "This link has already been used. Ask for a new one." : "This link has expired. Ask for a new one.";
+    return c.json({ error: msg }, 400);
+  }
   await startSession(c, row.user_id);
   return c.json({ ok: true });
 });

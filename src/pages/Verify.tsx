@@ -5,7 +5,8 @@ import { api } from "../api";
 
 export default function Verify() {
   const [sp] = useSearchParams();
-  const token = sp.get("token") ?? "";
+  // Keep only the token characters, so stray text copied after the link is ignored.
+  const token = (sp.get("token") ?? "").match(/^[A-Za-z0-9_-]+/)?.[0] ?? "";
   const nav = useNavigate();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");

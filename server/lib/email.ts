@@ -11,7 +11,8 @@ export async function sendEmail(env: Env, m: Mail): Promise<SendResult> {
   const name = (m.fromName ?? env.PRODUCT_NAME).replace(/[<>"\r\n]/g, "").slice(0, 60);
   if (env.DRY_RUN === "true") {
     // Dry run logs the message (including sign-in links) to the Vercel runtime logs.
-    console.log("DRY_RUN email", JSON.stringify({ to: m.to, subject: m.subject, text: m.text }));
+    // Links are listed on their own so they are easy to copy.
+    console.log(`DRY_RUN email to ${m.to} | subject: ${m.subject} | LINKS: ${(m.text.match(/https?:\/\/[^\s]+/g) ?? []).join("  ")}`);
     return { ok: true, dryRun: true };
   }
   try {
