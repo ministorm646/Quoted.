@@ -1,0 +1,25 @@
+# QuoteNudge on Vercel (working name)
+
+Follow-ups for quotes that go quiet. Vite + React site, one Hono API served by a single Vercel Function, Turso (SQLite) database, Cloudflare Turnstile, Resend.
+
+## Folder layout (keep it exactly like this)
+
+    package.json, vercel.json, vite.config.mts, tsconfig.json, index.html, .gitignore, .env.example
+    api/index.ts                 the one Vercel Function (all /api/... requests)
+    server/                      index.ts, admin.ts, quotes.ts, settings.ts, db.ts, env.ts, schema.ts, types.ts
+    server/lib/                  accounts.ts, crypto.ts, email.ts, security.ts, template.ts, util.ts
+    src/                         main.tsx, api.ts, lib.ts, index.css
+    src/components/              AppShell.tsx, Celebrate.tsx, Shell.tsx, StatusBadge.tsx, Turnstile.tsx
+    src/pages/                   AddQuote.tsx, Admin.tsx, Dashboard.tsx, Landing.tsx, QuoteDetail.tsx, Settings.tsx, SignIn.tsx, Verify.tsx
+
+The repo must have package.json and vercel.json at its top level, not inside a subfolder.
+
+## Settings (Vercel > Project > Settings > Environment Variables)
+
+See .env.example. The tables are created automatically the first time the API runs, so there is no SQL to paste.
+Open /api/health on your site: {"ok":true} means setup is complete. If it says "Setup incomplete", it lists the missing settings by name.
+
+## Notes
+
+- DRY_RUN=true (the default) logs emails, including sign-in links, to Vercel's runtime logs instead of sending them. Set DRY_RUN=false once Resend is ready.
+- Vercel's Hobby plan is for non-commercial use and allows cron jobs only once a day. The follow-up scheduler (Phase 3) needs something that runs every 15 minutes: Vercel Pro cron, or an outside scheduler that calls the API.
