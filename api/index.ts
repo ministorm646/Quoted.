@@ -1,6 +1,6 @@
 import { waitUntil } from "@vercel/functions";
-import app from "../server/index";
-import { buildEnv, missingSettings } from "../server/env";
+import app from "../server/index.js";
+import { buildEnv, missingSettings } from "../server/env.js";
 
 // One Vercel Function handles every /api/... request (see rewrites in vercel.json).
 export default {

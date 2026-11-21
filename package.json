@@ -1,11 +1,14 @@
 {
   "name": "quotenudge",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build"
   },
-  "engines": { "node": ">=20" },
+  "engines": {
+    "node": ">=20"
+  },
   "dependencies": {
     "@libsql/client": "^0.15.0",
     "@vercel/functions": "^2.0.0",
