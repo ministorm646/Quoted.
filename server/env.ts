@@ -32,5 +32,9 @@ export function buildEnv(): Env {
     SEAT_CAP: e.SEAT_CAP ?? "30",
     DAILY_SEND_CAP: e.DAILY_SEND_CAP ?? "80",
     CRON_SECRET: e.CRON_SECRET ?? "",
+    COMPANY_NAME: e.COMPANY_NAME ?? "",
+    COMPANY_NUMBER: e.COMPANY_NUMBER ?? "",
+    COMPANY_ADDRESS: e.COMPANY_ADDRESS ?? "",
+    SUPPORT_EMAIL: e.SUPPORT_EMAIL || e.FROM_EMAIL || "",
   };
 }

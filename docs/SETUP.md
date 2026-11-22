@@ -21,6 +21,16 @@ Resend only lets you send to anyone from a domain you own and have verified.
 3. Set APP_URL to https://YOUR-DOMAIN (no trailing slash). Redeploy.
 4. Cloudflare Turnstile dashboard: add YOUR-DOMAIN to the widget's hostnames (or create real keys now) and put the real keys in TURNSTILE_SITE_KEY and TURNSTILE_SECRET.
 
+## B2. Company details (recommended before launch)
+
+In Vercel environment variables add, then redeploy:
+- COMPANY_NAME, COMPANY_NUMBER and COMPANY_ADDRESS: your registered company details. They appear in the footer, the privacy page and the bottom of QuoteMe's own emails. UK businesses that trade online are expected to show these.
+- SUPPORT_EMAIL: where customers write to you (the Contact page shows it). Defaults to FROM_EMAIL.
+
+Share previews: when someone pastes your site link into a chat or social post, it shows a card with the image in public/og-image.png. The site address comes from APP_URL (or Vercel's production address) at build time, so redeploy after setting APP_URL or adding a domain.
+
+Search engines: /robots.txt and /sitemap.xml are created automatically. Signed-in pages and client reply pages are marked so they are not indexed.
+
 ## C. Resend
 
 1. Sign up at resend.com. Domains, Add Domain, enter YOUR-DOMAIN.

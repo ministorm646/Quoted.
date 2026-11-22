@@ -30,6 +30,7 @@ export const EVENT_LABEL: Record<string, string> = {
   client_unsub: "Client unsubscribed from emails",
   marked_won: "You marked it as won",
   marked_lost: "You marked it as lost",
+  edited: "You edited the details",
   paused: "You paused follow-ups",
   resumed: "You resumed follow-ups",
 };

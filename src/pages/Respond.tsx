@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import Shell from "../components/Shell";
-import { api } from "../api";
+import { api, usePageTitle } from "../api";
 
 const COPY: Record<string, { label: string; thanks: (b: string) => string }> = {
   yes: { label: "Yes, go ahead", thanks: (b) => `Thank you. ${b} has been told and will be in touch.` },
@@ -11,6 +11,7 @@ const COPY: Record<string, { label: string; thanks: (b: string) => string }> = {
 
 // Email buttons only open this page. Nothing changes until the client taps Confirm.
 export default function Respond() {
+  usePageTitle("Your reply");
   const { token = "", action = "" } = useParams();
   const copy = COPY[action];
   const [info, setInfo] = useState<{ business: string; job: string } | null>(null);

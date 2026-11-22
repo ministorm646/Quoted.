@@ -14,6 +14,10 @@ export interface Env {
   SEAT_CAP: string;
   DAILY_SEND_CAP: string;
   CRON_SECRET: string;
+  COMPANY_NAME: string;
+  COMPANY_NUMBER: string;
+  COMPANY_ADDRESS: string;
+  SUPPORT_EMAIL: string;
 }
 export type SessionUser = { id: string; email: string };
 export type HC = {

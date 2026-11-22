@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import Shell from "../components/Shell";
-import { api } from "../api";
+import { api, usePageTitle } from "../api";
 
 export default function Verify() {
+  usePageTitle("Signing in");
   const [sp] = useSearchParams();
   // Keep only the token characters, so stray text copied after the link is ignored.
   const token = (sp.get("token") ?? "").match(/^[A-Za-z0-9_-]+/)?.[0] ?? "";

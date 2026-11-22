@@ -5,10 +5,13 @@
   "outputDirectory": "dist",
   "crons": [{ "path": "/api/cron", "schedule": "0 8 * * *" }],
   "rewrites": [
+    { "source": "/(robots.txt|sitemap.xml)", "destination": "/api" },
     { "source": "/api/(.*)", "destination": "/api" },
     { "source": "/((?!api/).*)", "destination": "/index.html" }
   ],
   "headers": [
+    { "source": "/(app|admin|r|u)/:path*", "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }] },
+    { "source": "/(app|admin|verify|signin)", "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }] },
     {
       "source": "/(.*)",
       "headers": [

@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import Shell from "../components/Shell";
-import { api } from "../api";
+import { api, usePageTitle } from "../api";
 
 export default function Unsubscribe() {
+  usePageTitle("Unsubscribe");
   const { token = "" } = useParams();
   const [business, setBusiness] = useState<string | null>(null);
   const [bad, setBad] = useState(false);

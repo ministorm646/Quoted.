@@ -10,8 +10,8 @@ Follow-ups for quotes that go quiet. Vite + React site, one Hono API served by a
     server/lib/                  accounts.ts, crypto.ts, email.ts, security.ts, template.ts, util.ts
     src/                         main.tsx, api.ts, lib.ts, index.css
     src/components/              AppShell.tsx, Celebrate.tsx, Shell.tsx, StatusBadge.tsx, Turnstile.tsx
-    src/pages/                   AddQuote, Admin, AdminStats, Dashboard, Landing, Privacy, QuoteDetail, Refer, Respond, Settings, SignIn, Unsubscribe, Verify (.tsx)
-    public/                      manifest.webmanifest, icons, favicon.svg
+    src/pages/                   AddQuote, Admin, AdminStats, Contact, Dashboard, Landing, NotFound, Privacy, QuoteDetail, Refer, Respond, Settings, SignIn, Terms, Unsubscribe, Verify (.tsx)
+    public/                      manifest.webmanifest, icons, favicon.svg, og-image.png
     tests/ and docs/             automated tests; setup and compliance guides
 
 The repo must have package.json and vercel.json at its top level, not inside a subfolder.

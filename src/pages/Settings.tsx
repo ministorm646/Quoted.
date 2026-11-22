@@ -1,7 +1,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import AppShell from "../components/AppShell";
-import { api, type Me } from "../api";
+import { api, type Me, usePageTitle } from "../api";
 
 type S = { name: string; replyTo: string; schedule: number[]; template: string; defaultTemplate: string };
 
@@ -82,6 +82,12 @@ function Form({ me }: { me: Me }) {
           </div>
         </section>
 
+        <section aria-label="Your data">
+          <h2 className="text-xl font-bold">Your data</h2>
+          <p className="mt-2 text-sm">Download every quote you have logged as a spreadsheet.</p>
+          <a className="btn btn-outline mt-3" href="/api/export.csv" download>Download my quotes (CSV)</a>
+        </section>
+
         <section className="border-2 border-error rounded-xl p-5" aria-label="Delete account">
           <h2 className="text-xl font-bold">Delete my account and data</h2>
           <p className="mt-2 text-sm">This permanently removes your business, quotes and history, and stops all follow-ups. Type {me.email} to confirm.</p>
@@ -93,4 +99,5 @@ function Form({ me }: { me: Me }) {
   );
 }
 
-export default function Settings() { return <AppShell>{(me) => <Form me={me} />}</AppShell>; }
+export default function Settings() {
+  usePageTitle("Settings"); return <AppShell>{(me) => <Form me={me} />}</AppShell>; }

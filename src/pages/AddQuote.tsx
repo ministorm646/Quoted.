@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import AppShell from "../components/AppShell";
-import { api } from "../api";
+import { api, usePageTitle } from "../api";
 
 function Form() {
   const nav = useNavigate();
@@ -40,4 +40,5 @@ function Form() {
   );
 }
 
-export default function AddQuote() { return <AppShell><Form /></AppShell>; }
+export default function AddQuote() {
+  usePageTitle("Add a quote"); return <AppShell><Form /></AppShell>; }

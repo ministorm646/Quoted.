@@ -13,6 +13,7 @@ import { admin } from "./admin.js";
 import { pub } from "./public.js";
 import { runScheduler } from "./scheduler.js";
 import { REFERRAL_CAP } from "./referrals.js";
+import { toCsv } from "./lib/csv.js";
 import { quotes } from "./quotes.js";
 import { settings, account } from "./settings.js";
 
@@ -27,7 +28,8 @@ app.use("*", originCheck, loadSession);
 app.get("/api/health", (c) => c.json({ ok: true }));
 
 app.get("/api/config", (c) =>
-  c.json({ name: c.env.PRODUCT_NAME, turnstileSiteKey: c.env.TURNSTILE_SITE_KEY, contactEmail: c.env.FROM_EMAIL }));
+  c.json({ name: c.env.PRODUCT_NAME, turnstileSiteKey: c.env.TURNSTILE_SITE_KEY, contactEmail: c.env.SUPPORT_EMAIL,
+    company: { name: c.env.COMPANY_NAME, number: c.env.COMPANY_NUMBER, address: c.env.COMPANY_ADDRESS } }));
 
 // Early-access request. Always answers the same way, so nobody can probe the list.
 app.post("/api/waitlist", async (c) => {
@@ -132,6 +134,23 @@ app.get("/api/referrals", guard, async (c) => {
   const n = (await c.env.DB.prepare("SELECT COUNT(*) AS n FROM referrals WHERE referrer_business_id = ?").bind(b.id).first<{ n: number }>())?.n ?? 0;
   return c.json({ code: b.code, link: `${c.env.APP_URL}/?ref=${b.code}`, credited: n, cap: REFERRAL_CAP, freeUntil: b.freeUntil });
 });
+
+// Everything the signed-in business has logged, as a spreadsheet they can keep.
+app.get("/api/export.csv", guard, async (c) => {
+  const { results } = await c.env.DB.prepare(
+    `SELECT q.client_name, q.client_email, q.amount_pence, q.description, q.status, q.followups_sent, q.created_at
+     FROM quotes q JOIN businesses b ON b.id = q.business_id WHERE b.user_id = ? ORDER BY q.created_at DESC`,
+  ).bind(c.get("user")!.id).all<Record<string, unknown>>();
+  const rows: unknown[][] = [["Client", "Client email", "Amount (GBP)", "Job", "Status", "Follow-ups sent", "Logged at"],
+    ...results.map((r) => [r.client_name, r.client_email, (Number(r.amount_pence) / 100).toFixed(2), r.description, r.status, r.followups_sent, r.created_at])];
+  return c.body(toCsv(rows), 200, { "Content-Type": "text/csv; charset=utf-8", "Content-Disposition": 'attachment; filename="quotes.csv"' });
+});
+
+app.get("/robots.txt", (c) => c.text(
+  `User-agent: *\nAllow: /\nDisallow: /app\nDisallow: /admin\nDisallow: /api/\nDisallow: /r/\nDisallow: /u/\nDisallow: /verify\n\nSitemap: ${c.env.APP_URL}/sitemap.xml\n`));
+app.get("/sitemap.xml", (c) => c.body(
+  `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${["/", "/privacy", "/terms", "/contact"].map((p) => `  <url><loc>${c.env.APP_URL}${p}</loc></url>`).join("\n")}\n</urlset>\n`,
+  200, { "Content-Type": "application/xml; charset=utf-8" }));
 
 app.route("/api", pub);
 app.route("/api/admin", admin);

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import AppShell from "../components/AppShell";
-import { api } from "../api";
+import { api, usePageTitle } from "../api";
 
 type R = { link: string; credited: number; cap: number; freeUntil: string };
 
@@ -35,4 +35,5 @@ function View() {
   );
 }
 
-export default function Refer() { return <AppShell><View /></AppShell>; }
+export default function Refer() {
+  usePageTitle("Refer a friend"); return <AppShell><View /></AppShell>; }

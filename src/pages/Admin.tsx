@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Shell from "../components/Shell";
-import { api, useMe } from "../api";
+import { api, useMe, usePageTitle } from "../api";
 
 type Item = { id: string; email: string; status: string; createdAt: string; businessName: string; trade: string; chat: boolean };
 type Data = { items: Item[]; seats: { used: number; cap: number } };
 
 export default function Admin() {
+  usePageTitle("Early access requests");
   const me = useMe();
   const nav = useNavigate();
   const [data, setData] = useState<Data | null>(null);

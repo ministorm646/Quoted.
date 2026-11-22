@@ -11,6 +11,10 @@ import QuoteDetail from "./pages/QuoteDetail";
 import Settings from "./pages/Settings";
 import Admin from "./pages/Admin";
 import Privacy from "./pages/Privacy";
+import Terms from "./pages/Terms";
+import Contact from "./pages/Contact";
+import NotFound from "./pages/NotFound";
+import ErrorBoundary from "./components/ErrorBoundary";
 import Refer from "./pages/Refer";
 import AdminStats from "./pages/AdminStats";
 import Respond from "./pages/Respond";
@@ -18,6 +22,7 @@ import Unsubscribe from "./pages/Unsubscribe";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
+    <ErrorBoundary>
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Landing />} />
@@ -31,10 +36,13 @@ createRoot(document.getElementById("root")!).render(
         <Route path="/admin" element={<Admin />} />
         <Route path="/admin/stats" element={<AdminStats />} />
         <Route path="/privacy" element={<Privacy />} />
+        <Route path="/terms" element={<Terms />} />
+        <Route path="/contact" element={<Contact />} />
         <Route path="/r/:token/:action" element={<Respond />} />
         <Route path="/u/:token" element={<Unsubscribe />} />
-        <Route path="*" element={<Landing />} />
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>
+    </ErrorBoundary>
   </StrictMode>,
 );

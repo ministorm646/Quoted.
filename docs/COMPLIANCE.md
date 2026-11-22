@@ -25,6 +25,9 @@ This is a working note, not legal advice. Have it checked before real customers 
 - Stored: client name and email, amount, one-line job description, event history, sign-in and rate-limit records.
 - Account deletion (Settings) removes the business, its quotes and history, and sign-in records.
 
+## Legal pages need a proper review
+The privacy page (/privacy) and terms of use (/terms) are plain-English drafts written to match how the service works. Before taking payments or signing up the public, have them reviewed by a solicitor, and add your company details (COMPANY_NAME, COMPANY_NUMBER, COMPANY_ADDRESS) so they show on the site.
+
 ## Other things to check
 - Register with the ICO and pay the data protection fee if you are required to.
 - Have a data processing agreement with the hosting, database and email providers.

@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import AppShell from "../components/AppShell";
 import StatusBadge from "../components/StatusBadge";
-import { api } from "../api";
+import { api, usePageTitle } from "../api";
 import { fmtDate, money, type QuoteRow } from "../lib";
 
 type Stats = { waitingPence: number; wonPence: number; won: number; lost: number; winRate: number | null };
@@ -17,6 +17,7 @@ function Quotes() {
   const [data, setData] = useState<{ quotes: QuoteRow[]; stats: Stats } | null>(null);
   const [failed, setFailed] = useState(false);
   const [tab, setTab] = useState<Tab>("open");
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
     api<{ quotes: QuoteRow[]; stats: Stats }>("/api/quotes").then((r) => (r.ok ? setData(r.data) : setFailed(true)));
@@ -26,7 +27,9 @@ function Quotes() {
   if (!data) return <div className="space-y-4"><div className="skeleton h-36 w-full" /><div className="skeleton h-20 w-full" /><div className="skeleton h-20 w-full" /></div>;
 
   const { quotes, stats } = data;
-  const rows = quotes.filter((q) => TABS.find((t) => t[0] === tab)![2].includes(q.status));
+  const needle = search.trim().toLowerCase();
+  const rows = quotes.filter((q) => TABS.find((t) => t[0] === tab)![2].includes(q.status))
+    .filter((q) => !needle || q.clientName.toLowerCase().includes(needle) || q.description.toLowerCase().includes(needle));
   const count = (t: Tab) => quotes.filter((q) => TABS.find((x) => x[0] === t)![2].includes(q.status)).length;
 
   return (
@@ -48,6 +51,11 @@ function Quotes() {
         ))}
       </div>
 
+      {quotes.length >= 4 && (
+        <input className="input input-bordered w-full mt-4" type="search" placeholder="Search by client or job" aria-label="Search quotes"
+          value={search} onChange={(e) => setSearch(e.target.value)} />
+      )}
+
       {rows.length === 0 ? (
         <div className="mt-6 text-center py-10">
           {quotes.length === 0 ? (
@@ -57,7 +65,7 @@ function Quotes() {
               <Link to="/app/new" className="btn btn-primary mt-5">Add your first quote</Link>
             </>
           ) : (
-            <p>Nothing here yet.</p>
+            <p>{needle ? "No quotes match your search." : "Nothing here yet."}</p>
           )}
         </div>
       ) : (
@@ -86,5 +94,6 @@ function Quotes() {
 }
 
 export default function Dashboard() {
+  usePageTitle("Your quotes");
   return <AppShell><Quotes /></AppShell>;
 }

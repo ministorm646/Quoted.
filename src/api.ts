@@ -17,7 +17,10 @@ export async function api<T = any>(path: string, opts: { method?: string; body?:
   return { ok: res.ok, status: res.status, data: data as T };
 }
 
-export type Config = { name: string; turnstileSiteKey: string; contactEmail: string };
+export type Config = {
+  name: string; turnstileSiteKey: string; contactEmail: string;
+  company: { name: string; number: string; address: string };
+};
 let cfgPromise: Promise<Config> | null = null;
 export function useConfig(): Config | null {
   const [cfg, setCfg] = useState<Config | null>(null);
@@ -44,4 +47,10 @@ export function useMe(): Me | null {
     });
   }, [nav]);
   return me;
+}
+
+// Sets the browser tab title, e.g. "Privacy | QuoteMe".
+export function usePageTitle(title: string) {
+  const cfg = useConfig();
+  useEffect(() => { document.title = `${title} | ${cfg?.name ?? "QuoteMe"}`; }, [title, cfg]);
 }

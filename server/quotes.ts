@@ -3,7 +3,8 @@ import type { Context } from "hono";
 import type { HC } from "./types.js";
 import { guard, hit, readJson } from "./lib/security.js";
 import { newId, randomToken } from "./lib/crypto.js";
-import { cleanEmail, cleanText, nowIso, parsePounds } from "./lib/util.js";
+import { nowIso } from "./lib/util.js";
+import { parseQuote } from "./lib/validate.js";
 import { DEFAULT_SCHEDULE } from "./lib/template.js";
 import { creditReferral } from "./referrals.js";
 import { sendEmail } from "./lib/email.js";
@@ -58,14 +59,9 @@ quotes.post("/", async (c) => {
   if (!b) return c.json({ error: "Invalid request" }, 400);
   if (!(await hit(c.env, `qn:${user.id}`, 60, 3600))) return c.json({ error: "That is a lot of quotes in an hour. Try again shortly." }, 429);
 
-  const clientName = cleanText(b.clientName, 80);
-  const clientEmail = cleanEmail(b.clientEmail);
-  const amountPence = parsePounds(b.amount);
-  const description = cleanText(b.description, 140);
-  if (!clientName) return c.json({ error: "Enter the client's name." }, 400);
-  if (!clientEmail) return c.json({ error: "Enter a valid client email." }, 400);
-  if (amountPence === null) return c.json({ error: "Enter the quote amount in pounds, for example 450 or 1250.50." }, 400);
-  if (!description) return c.json({ error: "Add a one-line description of the job." }, 400);
+  const parsed = parseQuote(b);
+  if (!parsed.ok) return c.json({ error: parsed.error }, 400);
+  const { clientName, clientEmail, amountPence, description } = parsed.value;
 
   const biz = c.get("biz")!;
   const now = Date.now();
@@ -171,4 +167,23 @@ quotes.post("/:id/test", async (c) => {
   const mail = followupMail(c.env, q, 1);
   const r = await sendEmail(c.env, { ...mail, to: user.email, subject: `[Test] ${mail.subject}` });
   return r.ok ? c.json({ ok: true, to: user.email, dryRun: !!r.dryRun }) : c.json({ error: "The test email could not be sent." }, 502);
+});
+
+// Fix a typo in the details of a quote.
+quotes.put("/:id", async (c) => {
+  const user = c.get("user")!;
+  const b = await readJson(c);
+  if (!b) return c.json({ error: "Invalid request" }, 400);
+  if (!(await hit(c.env, `qe:${user.id}`, 60, 3600))) return c.json({ error: "Too many changes. Try again shortly." }, 429);
+  const parsed = parseQuote(b);
+  if (!parsed.ok) return c.json({ error: parsed.error }, 400);
+  const { clientName, clientEmail, amountPence, description } = parsed.value;
+  const id = c.req.param("id");
+  const iso = nowIso();
+  const [upd] = await c.env.DB.batch([
+    c.env.DB.prepare("UPDATE quotes SET client_name=?, client_email=?, amount_pence=?, description=?, updated_at=? WHERE id=? AND business_id=?")
+      .bind(clientName, clientEmail, amountPence, description, iso, id, c.get("biz")!.id),
+    c.env.DB.prepare("INSERT INTO events (quote_id, type, created_at) SELECT ?, 'edited', ? WHERE changes() > 0").bind(id, iso),
+  ]);
+  return upd.meta.changes === 1 ? c.json({ ok: true }) : c.json({ error: "Quote not found" }, 404);
 });

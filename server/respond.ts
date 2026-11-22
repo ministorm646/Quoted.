@@ -2,6 +2,7 @@ import type { Db } from "./db.js";
 import type { Env } from "./types.js";
 import type { Mail } from "./lib/email.js";
 import { escapeHtml } from "./lib/util.js";
+import { emailShell } from "./lib/layout.js";
 
 export const ACTIONS: Record<string, { status: string; event: string; label: string }> = {
   yes: { status: "accepted", event: "client_accept", label: "Yes, go ahead" },
@@ -57,6 +58,6 @@ export function ownerNotice(env: Env, q: TokenQuote, label: string): Mail {
     to: q.owner_email,
     subject: `${q.client_name} replied: ${label}`,
     text: `${line}\n\nOpen the quote: ${link}`,
-    html: `<div style="font-family:Arial,sans-serif;color:#10231C;max-width:480px;margin:0 auto;padding:24px"><p style="font-size:16px;line-height:1.5">${escapeHtml(line)}</p><p><a href="${escapeHtml(link)}" style="display:inline-block;background:#0E7A55;color:#fff;text-decoration:none;font-weight:bold;padding:14px 22px;border-radius:8px">Open the quote</a></p></div>`,
+    html: emailShell(env, `<p style="font-size:16px;line-height:1.5;margin:0 0 20px">${escapeHtml(line)}</p><p style="margin:0"><a href="${escapeHtml(link)}" style="display:inline-block;background:#0E7A55;color:#ffffff;text-decoration:none;font-weight:bold;padding:14px 24px;border-radius:8px">Open the quote</a></p>`),
   };
 }

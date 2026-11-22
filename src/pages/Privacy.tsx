@@ -1,15 +1,19 @@
 import Shell from "../components/Shell";
-import { useConfig } from "../api";
+import { useConfig, usePageTitle } from "../api";
 
 export default function Privacy() {
   const cfg = useConfig();
   const contact = cfg?.contactEmail ?? "the address on our emails";
+  usePageTitle("Privacy");
+  const co = cfg?.company;
   const h = "text-xl font-bold mt-8";
   return (
     <Shell>
       <article className="max-w-2xl">
         <h1 className="text-3xl font-extrabold">Privacy</h1>
         <p className="mt-3">This explains what {cfg?.name ?? "this service"} does with personal data, in plain English. Questions or requests: {contact}.</p>
+
+        {co?.name && <p className="mt-2">Operated by {co.name}{co.number ? `, company number ${co.number}` : ""}{co.address ? `, ${co.address}` : ""}.</p>}
 
         <h2 className={h}>Who uses what</h2>
         <p className="mt-2">There are three groups of people: businesses who ask for early access or use the service, the people those businesses send quotes to (their clients), and visitors to this site.</p>
@@ -31,6 +35,9 @@ export default function Privacy() {
 
         <h2 className={h}>Unsubscribing</h2>
         <p className="mt-2">Anyone who clicks Unsubscribe in a follow-up email is added to a list that applies across the whole service. They are not emailed again, whichever business sent the quote, and their open quotes are paused.</p>
+
+        <h2 className={h}>Cookies and fonts</h2>
+        <p className="mt-2">We use one essential cookie to keep you signed in. We don't use advertising or tracking cookies. The "I'm not a robot" check on the sign-in and early-access forms is provided by Cloudflare, and the text fonts are loaded from Google Fonts, so those providers can see your IP address when a page loads.</p>
 
         <h2 className={h}>Who else handles data</h2>
         <p className="mt-2">We use a hosting provider, a database provider, an email delivery provider and a bot-check provider to run the service. They process data on our behalf.</p>

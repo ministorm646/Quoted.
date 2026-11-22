@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Shell from "../components/Shell";
-import { api, useMe } from "../api";
+import { api, useMe, usePageTitle } from "../api";
 import { money } from "../lib";
 
 type S = {
@@ -18,6 +18,7 @@ const Card = ({ label, value, sub }: { label: string; value: string | number; su
 );
 
 export default function AdminStats() {
+  usePageTitle("Stats");
   const me = useMe();
   const nav = useNavigate();
   const [s, setS] = useState<S | null>(null);

@@ -1,9 +1,10 @@
 import { useState, type FormEvent } from "react";
 import Shell from "../components/Shell";
 import Turnstile from "../components/Turnstile";
-import { api, useConfig } from "../api";
+import { api, useConfig, usePageTitle } from "../api";
 
 export default function SignIn() {
+  usePageTitle("Sign in");
   const cfg = useConfig();
   const [email, setEmail] = useState("");
   const [token, setToken] = useState("");

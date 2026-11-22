@@ -1,9 +1,10 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import Shell from "../components/Shell";
 import Turnstile from "../components/Turnstile";
 import { api, useConfig } from "../api";
 import { money } from "../lib";
+import Logo from "../components/Logo";
 
 const TRADES: [string, string][] = [
   ["cleaning", "Cleaner"], ["building", "Builder"], ["landscaping", "Landscaper or gardener"], ["removals", "Removals"],
@@ -18,7 +19,7 @@ function Header() {
   return (
     <header className="sticky top-0 z-20 bg-white border-b-2 border-[#10231c]">
       <div className="mx-auto max-w-5xl px-4 h-16 flex items-center justify-between">
-        <Link to="/" className="font-display font-extrabold text-xl">{cfg?.name ?? "QuoteMe"}</Link>
+        <Link to="/" aria-label={`${cfg?.name ?? "QuoteMe"} home`}><Logo name={cfg?.name} /></Link>
         <nav className="hidden md:flex items-center gap-5" aria-label="Main">
           {LINKS.map(([h, l]) => <a key={h} href={h} className="font-medium hover:underline">{l}</a>)}
           <Link to="/signin" className="btn btn-sm btn-outline">Sign in</Link>
@@ -156,6 +157,8 @@ function EarlyAccess() {
 }
 
 export default function Landing() {
+  const cfg = useConfig();
+  useEffect(() => { document.title = `${cfg?.name ?? "QuoteMe"}: follow up quotes that go quiet`; }, [cfg]);
   return (
     <Shell header={<Header />} wide>
       <div className="mx-auto max-w-5xl px-4">
@@ -179,6 +182,20 @@ export default function Landing() {
                 <h3 className="text-xl font-bold mt-3">{t}</h3><p className="mt-1">{d}</p>
               </li>))}
           </ol>
+        </section>
+
+        <section className="py-10">
+          <h2 className="text-3xl font-extrabold">Everything you need, nothing you don't</h2>
+          <ul className="mt-6 grid gap-4 sm:grid-cols-2 md:grid-cols-3">
+            {[["See what is waiting", "One big figure shows the money still waiting for a reply, plus what you have won."],
+              ["Polite follow-ups", "Sent in your business name, in your own words, on the days you choose."],
+              ["One-tap replies", "Clients answer yes, question or no in a single tap, and the chasing stops."],
+              ["Unsubscribe built in", "Every email has an unsubscribe link, and it is respected straight away."],
+              ["Works on your phone", "Log a quote in seconds from a van or a doorstep. Add it to your home screen."],
+              ["Your data is yours", "Download your quotes any time, or delete your account and data in Settings."]].map(([t, d]) => (
+              <li key={t} className="bg-white border-2 border-[#10231c] rounded-xl p-4"><h3 className="font-bold text-lg">{t}</h3><p className="mt-1 text-sm">{d}</p></li>))}
+          </ul>
+          <p className="mt-6 font-medium">Built for cleaners, builders, landscapers, removals firms, plumbers, electricians, roofers, decorators, handymen and small agencies.</p>
         </section>
 
         <section id="email" className="py-10 scroll-mt-20 grid gap-8 md:grid-cols-2 md:items-center">
