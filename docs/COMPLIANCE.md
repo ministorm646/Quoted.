@@ -25,6 +25,11 @@ This is a working note, not legal advice. Have it checked before real customers 
 - Stored: client name and email, amount, one-line job description, event history, sign-in and rate-limit records.
 - Account deletion (Settings) removes the business, its quotes and history, and sign-in records.
 
+## Passwords and payments
+- Passwords are stored only as salted scrypt hashes. Sign-in is rate limited and protected by the bot check.
+- Card details never reach this service. The payment provider takes payment and sends receipts, and acts as seller of record, which is why it holds the payment data. Add it to your list of processors.
+- The privacy page and terms mention payments. Check them again with your adviser before you switch billing on.
+
 ## Legal pages need a proper review
 The privacy page (/privacy) and terms of use (/terms) are plain-English drafts written to match how the service works. Before taking payments or signing up the public, have them reviewed by a solicitor, and add your company details (COMPANY_NAME, COMPANY_NUMBER, COMPANY_ADDRESS) so they show on the site.
 

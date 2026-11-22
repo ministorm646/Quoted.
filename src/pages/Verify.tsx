@@ -14,9 +14,9 @@ export default function Verify() {
 
   async function go() {
     setBusy(true); setError("");
-    const r = await api<{ error?: string }>("/api/auth/verify", { body: { token } });
+    const r = await api<{ error?: string; needsPassword?: boolean }>("/api/auth/verify", { body: { token } });
     setBusy(false);
-    if (r.ok) return nav("/app", { replace: true });
+    if (r.ok) return nav(r.data.needsPassword ? "/app/password" : "/app", { replace: true });
     setError(r.data?.error ?? "Something went wrong. Please try again.");
   }
 

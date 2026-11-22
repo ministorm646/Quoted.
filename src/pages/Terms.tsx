@@ -8,7 +8,8 @@ export default function Terms() {
   const h = "text-xl font-bold mt-8";
   return (
     <Shell>
-      <article className="max-w-2xl">
+      <div className="lg:grid lg:grid-cols-[minmax(0,42rem)_320px] lg:gap-12">
+      <article>
         <h1 className="text-3xl font-extrabold">Terms of use</h1>
         <p className="mt-3">These are the rules for using {cfg?.name ?? "the service"}. By signing in you agree to them. "We" means {who}.</p>
 
@@ -30,6 +31,9 @@ export default function Terms() {
         <h2 className={h}>Early access</h2>
         <p className="mt-2">Places are limited and by invitation. We may change, pause or end early access, and will tell you before charging for anything. We won't charge you without your agreement.</p>
 
+        <h2 className={h}>Subscriptions</h2>
+        <p className="mt-2">After early access, the service is paid for by subscription. The price, the billing period and any founding-member discount are shown on the plan page before you pay. Payments are taken by our payment provider. Subscriptions renew until you cancel, and you can cancel at any time from the billing page, keeping access until the end of the period you have paid for. If a payment fails we will tell you, and may pause follow-ups until it is fixed.</p>
+
         <h2 className={h}>Availability and changes</h2>
         <p className="mt-2">We work to keep the service running but cannot promise it will always be available or error-free. We may update these terms, and will make the current version available on this page.</p>
 
@@ -45,6 +49,11 @@ export default function Terms() {
         <h2 className={h}>Contact</h2>
         <p className="mt-2">Questions about these terms: {cfg?.contactEmail ?? "see the contact page"}.</p>
       </article>
+        <aside className="hidden lg:block panel p-5 self-start sticky top-24">
+          <h2 className="font-bold text-lg">The short version</h2>
+          <ul className="mt-3 space-y-2 text-sm list-disc pl-5"><li>Only add people who asked you for a quote.</li><li>Use it for follow-ups, not advertising.</li><li>Respect unsubscribes.</li><li>You can stop and delete your data at any time.</li></ul>
+        </aside>
+      </div>
     </Shell>
   );
 }

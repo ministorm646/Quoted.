@@ -59,6 +59,25 @@ Vercel's free plan only runs a scheduled job once a day. Use a free outside time
 
 iPhone (Safari): Share, Add to Home Screen. Android (Chrome): menu, Install app or Add to Home screen.
 
+## G. Passwords and signing in
+
+- Invited people sign in once with the emailed link, then are asked to create a password. After that they sign in with email and password. "Remember me" keeps them signed in for 30 days; without it they are signed out when the browser closes (and after 12 hours at most).
+- Forgot a password? On the sign-in page choose "Email me a link", sign in, and set a new one. Setting a new password signs out other devices.
+- Too many wrong tries (8 for one email in 15 minutes) pauses sign-in for that email. Passwords are stored only as salted scrypt hashes.
+- The first time the site starts after this update, it adds the new columns to your existing database by itself. Existing people keep their accounts and are marked as founding members.
+
+## H. Subscriptions with Lemon Squeezy
+
+Nothing changes for anyone until you set BILLING_ENABLED to true.
+
+1. Sign up at lemonsqueezy.com and create a store. Live payments need their business verification, so start early.
+2. Create a product (for example QuoteMe) with two subscription variants: Monthly and Annual. The prices must match PRICE_MONTHLY and PRICE_ANNUAL in Vercel (default 19 and 190 pounds, change them to what you want).
+3. For each variant copy its checkout link and its variant id. Put the links in LS_CHECKOUT_MONTHLY and LS_CHECKOUT_ANNUAL, and the ids in LS_VARIANT_MONTHLY and LS_VARIANT_ANNUAL.
+4. Founding discount: create a discount code (for example FOUNDER30) for the percentage you want, applying to subscription renewals for as long as the person stays subscribed, limited to your product. Put the code in FOUNDING_DISCOUNT_CODE and the percentage in FOUNDING_DISCOUNT_PERCENT. Everyone approved during early access is a founding member and gets the code applied at checkout.
+5. Webhook: in Lemon Squeezy, Settings, Webhooks, add https://YOUR-DOMAIN/api/billing/webhook. Choose a long random signing secret, put the same value in LS_WEBHOOK_SECRET, and tick all the subscription events.
+6. Use Lemon Squeezy's test mode first. Sign in as a test account, open Plan and billing, choose a plan and pay with their test card. Within a few seconds the page should show "You're subscribed". Check the discount shows on the checkout page for a founding member.
+7. When you are ready, set BILLING_ENABLED to true and redeploy. From then on, businesses whose free period has ended cannot add quotes and are not followed up until they subscribe. They can still sign in, view and download everything.
+
 ## If something goes wrong
 
 - /api/health lists missing settings by name.

@@ -9,13 +9,14 @@ import { DEFAULT_SCHEDULE } from "./lib/template.js";
 import { creditReferral } from "./referrals.js";
 import { sendEmail } from "./lib/email.js";
 import { followupMail } from "./lib/followup.js";
+import { accessInfo } from "./billing.js";
 
 export const quotes = new Hono<HC>();
 
 // Every route below is scoped to the signed-in user's own business.
 quotes.use("*", guard, async (c, next) => {
-  const biz = await c.env.DB.prepare("SELECT id, schedule FROM businesses WHERE user_id = ?")
-    .bind(c.get("user")!.id).first<{ id: string; schedule: string }>();
+  const biz = await c.env.DB.prepare("SELECT id, schedule, free_until, sub_status, sub_renews_at, plan, founding FROM businesses WHERE user_id = ?")
+    .bind(c.get("user")!.id).first<NonNullable<HC["Variables"]["biz"]>>();
   if (!biz) return c.json({ error: "No business found" }, 404);
   c.set("biz", biz);
   await next();
@@ -64,6 +65,9 @@ quotes.post("/", async (c) => {
   const { clientName, clientEmail, amountPence, description } = parsed.value;
 
   const biz = c.get("biz")!;
+  if (!accessInfo(biz, c.env.BILLING_ENABLED === "true").allowed) {
+    return c.json({ error: "Your free period has ended. Choose a plan to keep adding quotes and sending follow-ups.", code: "billing" }, 402);
+  }
   const now = Date.now();
   const first = (await c.env.DB.prepare("SELECT 1 AS x FROM quotes WHERE business_id = ? LIMIT 1").bind(biz.id).first()) ? 0 : 1;
   const next = new Date(now + scheduleOf(biz.schedule)[0] * DAY).toISOString();

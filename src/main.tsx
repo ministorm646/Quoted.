@@ -2,6 +2,8 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import "./index.css";
+import { initAppearance } from "./theme";
+initAppearance();
 import Landing from "./pages/Landing";
 import SignIn from "./pages/SignIn";
 import Verify from "./pages/Verify";
@@ -17,6 +19,8 @@ import NotFound from "./pages/NotFound";
 import ErrorBoundary from "./components/ErrorBoundary";
 import Refer from "./pages/Refer";
 import AdminStats from "./pages/AdminStats";
+import SetPassword from "./pages/SetPassword";
+import Billing from "./pages/Billing";
 import Respond from "./pages/Respond";
 import Unsubscribe from "./pages/Unsubscribe";
 
@@ -32,6 +36,8 @@ createRoot(document.getElementById("root")!).render(
         <Route path="/app/new" element={<AddQuote />} />
         <Route path="/app/quotes/:id" element={<QuoteDetail />} />
         <Route path="/app/refer" element={<Refer />} />
+        <Route path="/app/password" element={<SetPassword />} />
+        <Route path="/app/billing" element={<Billing />} />
         <Route path="/app/settings" element={<Settings />} />
         <Route path="/admin" element={<Admin />} />
         <Route path="/admin/stats" element={<AdminStats />} />

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-const COLOURS = ["#ffd84d", "#0e7a55", "#10231c", "#7fd6b0"];
+const COLOURS = ["var(--highlight)", "var(--accent)", "var(--ink)", "var(--accent)"];
 
 // A short burst when a quote is won. Disappears on its own; skipped for reduced motion.
 export default function Celebrate({ onDone }: { onDone: () => void }) {

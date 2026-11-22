@@ -18,9 +18,22 @@ export interface Env {
   COMPANY_NUMBER: string;
   COMPANY_ADDRESS: string;
   SUPPORT_EMAIL: string;
+  BILLING_ENABLED: string;
+  PRICE_MONTHLY: string;
+  PRICE_ANNUAL: string;
+  FOUNDING_DISCOUNT_PERCENT: string;
+  FOUNDING_DISCOUNT_CODE: string;
+  LS_CHECKOUT_MONTHLY: string;
+  LS_CHECKOUT_ANNUAL: string;
+  LS_VARIANT_MONTHLY: string;
+  LS_VARIANT_ANNUAL: string;
+  LS_WEBHOOK_SECRET: string;
 }
 export type SessionUser = { id: string; email: string };
 export type HC = {
   Bindings: Env;
-  Variables: { user?: SessionUser; csrf?: string; biz?: { id: string; schedule: string } };
+  Variables: {
+    user?: SessionUser; csrf?: string; sidHash?: string; via?: string; sessionCreated?: string;
+    biz?: { id: string; schedule: string; free_until: string; sub_status: string; sub_renews_at: string | null; plan: string | null; founding: number };
+  };
 };

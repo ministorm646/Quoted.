@@ -3,16 +3,16 @@ import { hmacHash, newId, randomToken } from "./crypto.js";
 import { addMonths, nowIso, referralCode } from "./util.js";
 
 export async function createUserWithBusiness(
-  env: Env, email: string, businessName: string, referredBy: string | null,
+  env: Env, email: string, businessName: string, referredBy: string | null, founding = 1,
 ): Promise<{ id: string }> {
   const uid = newId();
   const now = nowIso();
   await env.DB.batch([
     env.DB.prepare("INSERT INTO users (id, email, created_at) VALUES (?,?,?)").bind(uid, email, now),
     env.DB.prepare(
-      `INSERT INTO businesses (id, user_id, name, reply_to, free_until, referral_code, referred_by, created_at)
-       VALUES (?,?,?,?,?,?,?,?)`,
-    ).bind(newId(), uid, businessName, email, addMonths(3), referralCode(), referredBy, now),
+      `INSERT INTO businesses (id, user_id, name, reply_to, free_until, referral_code, referred_by, created_at, founding)
+       VALUES (?,?,?,?,?,?,?,?,?)`,
+    ).bind(newId(), uid, businessName, email, addMonths(3), referralCode(), referredBy, now, founding),
   ]);
   return { id: uid };
 }

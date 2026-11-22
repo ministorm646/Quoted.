@@ -15,13 +15,14 @@ const LINKS: [string, string][] = [["#how", "How it works"], ["#email", "Sample 
 
 function Header() {
   const cfg = useConfig();
+  const links = cfg?.billing.enabled ? [...LINKS.slice(0, 3), ["#pricing", "Pricing"], LINKS[3]] : LINKS;
   const [open, setOpen] = useState(false);
   return (
-    <header className="sticky top-0 z-20 bg-white border-b-2 border-[#10231c]">
-      <div className="mx-auto max-w-5xl px-4 h-16 flex items-center justify-between">
+    <header className="sticky top-0 z-20 bg-(--card) border-b-2 border-(--line)">
+      <div className="mx-auto max-w-6xl px-4 h-16 flex items-center justify-between">
         <Link to="/" aria-label={`${cfg?.name ?? "QuoteMe"} home`}><Logo name={cfg?.name} /></Link>
         <nav className="hidden md:flex items-center gap-5" aria-label="Main">
-          {LINKS.map(([h, l]) => <a key={h} href={h} className="font-medium hover:underline">{l}</a>)}
+          {links.map(([h, l]) => <a key={h} href={h} className="font-medium hover:underline">{l}</a>)}
           <Link to="/signin" className="btn btn-sm btn-outline">Sign in</Link>
         </nav>
         <button className="md:hidden btn btn-ghost btn-square" aria-label="Menu" aria-expanded={open} aria-controls="mobile-menu" onClick={() => setOpen(!open)}>
@@ -31,8 +32,8 @@ function Header() {
         </button>
       </div>
       {open && (
-        <nav id="mobile-menu" className="md:hidden border-t-2 border-[#10231c] bg-white px-4 py-3 flex flex-col" aria-label="Main">
-          {LINKS.map(([h, l]) => <a key={h} href={h} onClick={() => setOpen(false)} className="py-3 font-medium border-b border-[#dfe5de]">{l}</a>)}
+        <nav id="mobile-menu" className="md:hidden border-t-2 border-(--line) bg-(--card) px-4 py-3 flex flex-col" aria-label="Main">
+          {links.map(([h, l]) => <a key={h} href={h} onClick={() => setOpen(false)} className="py-3 font-medium border-b border-(--line-soft)">{l}</a>)}
           <Link to="/signin" className="py-3 font-medium">Sign in</Link>
         </nav>
       )}
@@ -52,12 +53,12 @@ function Demo() {
       <p className="font-medium">Waiting for a reply</p>
       <p className="font-display font-extrabold text-5xl mt-1" aria-live="polite"><span className="hl">{money(waiting)}</span></p>
       <ul className="mt-4 space-y-2 text-sm">
-        <li className="flex justify-between gap-3 border-2 border-[#10231c] rounded-lg p-3">
+        <li className="flex justify-between gap-3 border-2 border-(--line) rounded-lg p-3">
           <span><b>Sam Taylor</b><br />Kitchen repaint</span>
           <span className="text-right"><b>{money(sam)}</b><br />
             <span className={`badge ${reply === "yes" ? "badge-success" : reply === "waiting" ? "badge-warning" : "badge-info badge-outline"}`}>{reply === "waiting" ? "Waiting for a reply" : REPLY_TEXT[reply]}</span></span>
         </li>
-        <li className="flex justify-between gap-3 border-2 border-[#dfe5de] rounded-lg p-3">
+        <li className="flex justify-between gap-3 border-2 border-(--line-soft) rounded-lg p-3">
           <span><b>Priya Shah</b><br />Garden fence</span>
           <span className="text-right"><b>{money(priya)}</b><br /><span className="badge badge-info">Follow-up sent</span></span>
         </li>
@@ -90,11 +91,11 @@ function SampleEmail() {
       <div className="mt-4 space-y-2">
         <button className={`${btn} btn-primary`} onClick={() => setTapped("yes")}>Yes, go ahead</button>
         <button className={`${btn} btn-outline`} onClick={() => setTapped("question")}>I have a question</button>
-        <button className={`${btn} btn-ghost bg-[#f4f6f3]`} onClick={() => setTapped("no")}>Not interested</button>
+        <button className={`${btn} btn-ghost bg-(--paper)`} onClick={() => setTapped("no")}>Not interested</button>
       </div>
       <p className="text-sm mt-4">Kind regards, Bright Cleaners</p>
       <p className="text-xs mt-3 opacity-80">Don't want these emails? Unsubscribe</p>
-      {tapped && <p role="status" className="mt-4 text-sm border-2 border-[#10231c] rounded-lg p-3 bg-[#ffd84d]/40">In a real email this opens a page where your client confirms with one more tap. That way, mail scanners can't answer for them.</p>}
+      {tapped && <p role="status" className="mt-4 text-sm border-2 border-(--line) rounded-lg p-3 callout">In a real email this opens a page where your client confirms with one more tap. That way, mail scanners can't answer for them.</p>}
     </div>
   );
 }
@@ -161,8 +162,8 @@ export default function Landing() {
   useEffect(() => { document.title = `${cfg?.name ?? "QuoteMe"}: follow up quotes that go quiet`; }, [cfg]);
   return (
     <Shell header={<Header />} wide>
-      <div className="mx-auto max-w-5xl px-4">
-        <section className="py-10 md:py-16 grid gap-10 md:grid-cols-2 md:items-center">
+      <div className="mx-auto max-w-6xl px-4">
+        <section className="py-8 md:py-14 grid gap-10 md:grid-cols-2 md:items-center">
           <div>
             <h1 className="text-4xl md:text-5xl font-extrabold leading-tight">Quotes go quiet. <span className="hl">The work shouldn't.</span></h1>
             <p className="mt-5 text-lg max-w-prose">Log a quote in about ten seconds. We send polite follow-ups in your name until the customer replies, and you see what is still waiting and what you have won.</p>
@@ -171,20 +172,20 @@ export default function Landing() {
           <Demo />
         </section>
 
-        <section id="how" className="py-10 scroll-mt-20">
+        <section id="how" className="py-8 md:py-12 scroll-mt-20">
           <h2 className="text-3xl font-extrabold">How it works</h2>
           <ol className="mt-6 grid gap-4 md:grid-cols-3">
             {[["1", "Log the quote", "Client name, email, amount and a one-line job. About ten seconds."],
               ["2", "We follow up for you", "Polite emails in your name, by default on day 3, 7 and 14. Replies come straight to you."],
               ["3", "They tap, you win it", "One tap tells you yes, question or no, and the chasing stops. You see your totals update."]].map(([n, t, d]) => (
               <li key={n} className="hard-card p-5">
-                <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-[#ffd84d] border-2 border-[#10231c] font-display font-extrabold">{n}</span>
+                <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-(--highlight) border-2 border-(--line) font-display font-extrabold">{n}</span>
                 <h3 className="text-xl font-bold mt-3">{t}</h3><p className="mt-1">{d}</p>
               </li>))}
           </ol>
         </section>
 
-        <section className="py-10">
+        <section className="py-8 md:py-12">
           <h2 className="text-3xl font-extrabold">Everything you need, nothing you don't</h2>
           <ul className="mt-6 grid gap-4 sm:grid-cols-2 md:grid-cols-3">
             {[["See what is waiting", "One big figure shows the money still waiting for a reply, plus what you have won."],
@@ -193,40 +194,55 @@ export default function Landing() {
               ["Unsubscribe built in", "Every email has an unsubscribe link, and it is respected straight away."],
               ["Works on your phone", "Log a quote in seconds from a van or a doorstep. Add it to your home screen."],
               ["Your data is yours", "Download your quotes any time, or delete your account and data in Settings."]].map(([t, d]) => (
-              <li key={t} className="bg-white border-2 border-[#10231c] rounded-xl p-4"><h3 className="font-bold text-lg">{t}</h3><p className="mt-1 text-sm">{d}</p></li>))}
+              <li key={t} className="bg-(--card) border-2 border-(--line) rounded-xl p-4"><h3 className="font-bold text-lg">{t}</h3><p className="mt-1 text-sm">{d}</p></li>))}
           </ul>
           <p className="mt-6 font-medium">Built for cleaners, builders, landscapers, removals firms, plumbers, electricians, roofers, decorators, handymen and small agencies.</p>
         </section>
 
-        <section id="email" className="py-10 scroll-mt-20 grid gap-8 md:grid-cols-2 md:items-center">
+        {cfg?.billing.enabled && cfg.billing.plans.length > 0 && (
+          <section id="pricing" className="py-8 md:py-12 scroll-mt-20">
+            <h2 className="text-3xl font-extrabold">Simple pricing</h2>
+            <p className="mt-2 max-w-prose">One plan with everything included. Pick monthly or save with annual.{cfg.billing.foundingPercent > 0 ? ` Founding members get ${cfg.billing.foundingPercent}% off for as long as they stay.` : ""}</p>
+            <div className="mt-6 grid gap-4 md:grid-cols-2 max-w-3xl">
+              {cfg.billing.plans.map((p) => (
+                <div key={p.id} className="hard-card p-6">
+                  <h3 className="text-xl font-bold">{p.label}</h3>
+                  <p className="mt-3 font-display font-extrabold text-4xl"><span className="hl">{money(Math.round(p.price * 100))}</span><span className="text-base font-medium"> / {p.interval}</span></p>
+                  <a href="#access" className="btn btn-primary mt-5">Ask for early access</a>
+                </div>))}
+            </div>
+          </section>
+        )}
+
+        <section id="email" className="py-8 md:py-12 scroll-mt-20 grid gap-8 md:grid-cols-2 md:items-center">
           <div><h2 className="text-3xl font-extrabold">What your client sees</h2>
             <p className="mt-3 max-w-prose">Short, friendly and easy to answer on a phone. Three big buttons, your business name on it, and an unsubscribe link in every email. Try the buttons.</p></div>
           <SampleEmail />
         </section>
 
-        <section className="py-10">
+        <section className="py-8 md:py-12">
           <div className="hard-card p-6 md:p-8 max-w-xl mx-auto text-center">
             <p className="font-medium">Founding member</p>
             <h2 className="text-3xl md:text-4xl font-extrabold mt-1"><span className="hl">Free for your first 3 months</span></h2>
             <ul className="mt-5 space-y-2 text-left max-w-sm mx-auto">
               {["Limited places while we are in early access", "No card needed", "Your feedback shapes what we build next", "Everything included, nothing locked"].map((t) => (
-                <li key={t} className="flex gap-2"><span aria-hidden="true" className="font-bold text-[#0e7a55]">&#10003;</span><span>{t}</span></li>))}
+                <li key={t} className="flex gap-2"><span aria-hidden="true" className="font-bold text-(--accent)">&#10003;</span><span>{t}</span></li>))}
             </ul>
             <a href="#access" className="btn btn-primary mt-6 text-base">Ask for a place</a>
           </div>
         </section>
 
-        <section id="faq" className="py-10 scroll-mt-20 max-w-3xl">
+        <section id="faq" className="py-8 md:py-12 scroll-mt-20 max-w-3xl">
           <h2 className="text-3xl font-extrabold">Questions</h2>
           <div className="mt-5 space-y-3">
             {FAQ.map(([q, a]) => (
-              <details key={q} className="bg-white border-2 border-[#10231c] rounded-xl p-4">
+              <details key={q} className="bg-(--card) border-2 border-(--line) rounded-xl p-4">
                 <summary className="font-bold">{q}</summary><p className="mt-3">{a}</p>
               </details>))}
           </div>
         </section>
 
-        <section id="access" className="py-10 pb-16 scroll-mt-20"><EarlyAccess /></section>
+        <section id="access" className="py-8 md:py-12 pb-14 scroll-mt-20"><EarlyAccess /></section>
       </div>
     </Shell>
   );

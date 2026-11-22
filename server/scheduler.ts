@@ -2,6 +2,7 @@ import type { Env } from "./types.js";
 import { sendEmail, type Mail, type SendResult } from "./lib/email.js";
 import { followupMail } from "./lib/followup.js";
 import { DEFAULT_SCHEDULE } from "./lib/template.js";
+import { ACCESS_WHERE } from "./billing.js";
 
 const DAY = 864e5, HOUR = 36e5;
 const MAX_RETRIES = 3;      // failed sends before a quote is paused
@@ -52,8 +53,9 @@ export async function runScheduler(
             b.name AS bname, b.reply_to, b.schedule, b.template
      FROM quotes q JOIN businesses b ON b.id = q.business_id
      WHERE q.status IN ${OPEN} AND q.next_followup_at IS NOT NULL AND q.next_followup_at <= ?
+       AND (? = 0 OR ${ACCESS_WHERE})
      ORDER BY q.next_followup_at LIMIT ?`,
-  ).bind(iso, BATCH).all<Cand>();
+  ).bind(iso, env.BILLING_ENABLED === "true" ? 1 : 0, iso.slice(0, 10), iso.slice(0, 10), BATCH).all<Cand>();
 
   const perBusiness = new Map<string, number>();
 

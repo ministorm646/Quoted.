@@ -10,18 +10,18 @@ export default function Shell({ children, nav, brandTo = "/", header, wide }: {
   const co = cfg?.company;
   return (
     <div className="min-h-screen flex flex-col">
-      <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:bg-white focus:border-2 focus:border-[#10231c] focus:rounded-lg focus:px-4 focus:py-2 font-bold">Skip to content</a>
+      <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:bg-(--card) focus:border-2 focus:border-(--line) focus:rounded-lg focus:px-4 focus:py-2 font-bold">Skip to content</a>
       {header ?? (
-        <header className="border-b-2 border-[#10231c] bg-white sticky top-0 z-10">
-          <div className="mx-auto max-w-5xl px-4 h-16 flex items-center justify-between">
+        <header className="border-b-2 border-(--line) bg-(--card) sticky top-0 z-10">
+          <div className="mx-auto max-w-6xl px-4 h-16 flex items-center justify-between">
             <Link to={brandTo} aria-label={`${cfg?.name ?? "QuoteMe"} home`}><Logo name={cfg?.name} /></Link>
             <nav className="flex items-center gap-2">{nav ?? <Link to="/signin" className="btn btn-sm btn-outline">Sign in</Link>}</nav>
           </div>
         </header>
       )}
-      <main id="main" tabIndex={-1} className={wide ? "flex-1 outline-none" : "flex-1 outline-none mx-auto w-full max-w-5xl px-4 py-6 md:py-8"}>{children}</main>
-      <footer className="border-t-2 border-[#10231c] bg-white">
-        <div className="mx-auto max-w-5xl px-4 py-6 text-sm grid gap-4 md:grid-cols-2">
+      <main id="main" tabIndex={-1} className={wide ? "flex-1 outline-none" : "flex-1 outline-none mx-auto w-full max-w-6xl px-4 py-6 md:py-8"}>{children}</main>
+      <footer className="border-t-2 border-(--line) bg-(--card)">
+        <div className="mx-auto max-w-6xl px-4 py-6 text-sm grid gap-4 md:grid-cols-2">
           <div>
             <p className="font-bold">{co?.name || cfg?.name || "QuoteMe"}</p>
             {co?.number && <p>Company number {co.number}</p>}

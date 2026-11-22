@@ -26,6 +26,11 @@ Open /api/health on your site: {"ok":true} means setup is complete. If it says "
 - DRY_RUN=true (the default) logs emails, including sign-in links, to Vercel's runtime logs instead of sending them. Set DRY_RUN=false once Resend is ready.
 - Vercel's Hobby plan is for non-commercial use and allows cron jobs only once a day. The follow-up scheduler (Phase 3) needs something that runs every 15 minutes: Vercel Pro cron, or an outside scheduler that calls the API.
 
+## What is where
+
+- server/lib/password.ts: password hashing and rules. server/billing.ts and server/billingRoutes.ts: plans, founding discount, checkout link and the payment webhook.
+- src/theme.ts: light and dark mode and accent colours. src/components/AppShell.tsx: side menu on a computer, bottom tabs on a phone.
+
 ## Guides
 
 - docs/SETUP.md: step-by-step setup, testing, domain, Resend, timer and going live.

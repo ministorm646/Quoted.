@@ -42,7 +42,7 @@ export default function AdminStats() {
         {s.signupsPerWeek.map((w) => (
           <li key={w.week} className="flex items-center gap-3">
             <span className="w-24 text-sm shrink-0">w/c {w.week.slice(5)}</span>
-            <span className="h-6 bg-[#0e7a55] border-2 border-[#10231c] rounded" style={{ width: `${(w.signups / max) * 100}%`, minWidth: w.signups ? 8 : 0 }} />
+            <span className="h-6 bg-(--accent) border-2 border-(--line) rounded" style={{ width: `${(w.signups / max) * 100}%`, minWidth: w.signups ? 8 : 0 }} />
             <span className="font-bold">{w.signups}</span>
           </li>))}
       </ul>

@@ -14,6 +14,9 @@ import { pub } from "./public.js";
 import { runScheduler } from "./scheduler.js";
 import { REFERRAL_CAP } from "./referrals.js";
 import { toCsv } from "./lib/csv.js";
+import { billing } from "./billingRoutes.js";
+import { accessInfo, foundingPercent, plans } from "./billing.js";
+import { checkPassword, hashPassword, verifyPassword } from "./lib/password.js";
 import { quotes } from "./quotes.js";
 import { settings, account } from "./settings.js";
 
@@ -29,7 +32,8 @@ app.get("/api/health", (c) => c.json({ ok: true }));
 
 app.get("/api/config", (c) =>
   c.json({ name: c.env.PRODUCT_NAME, turnstileSiteKey: c.env.TURNSTILE_SITE_KEY, contactEmail: c.env.SUPPORT_EMAIL,
-    company: { name: c.env.COMPANY_NAME, number: c.env.COMPANY_NUMBER, address: c.env.COMPANY_ADDRESS } }));
+    company: { name: c.env.COMPANY_NAME, number: c.env.COMPANY_NUMBER, address: c.env.COMPANY_ADDRESS },
+    billing: { enabled: c.env.BILLING_ENABLED === "true", foundingPercent: foundingPercent(c.env), plans: plans(c.env, false) } }));
 
 // Early-access request. Always answers the same way, so nobody can probe the list.
 app.post("/api/waitlist", async (c) => {
@@ -105,18 +109,86 @@ app.post("/api/auth/verify", async (c) => {
       : t.used_at ? "This link has already been used. Ask for a new one." : "This link has expired. Ask for a new one.";
     return c.json({ error: msg }, 400);
   }
-  await startSession(c, row.user_id);
-  return c.json({ ok: true });
+  await startSession(c, row.user_id, { remember: true, via: "link" });
+  const u = await c.env.DB.prepare("SELECT password_hash FROM users WHERE id = ?").bind(row.user_id).first<{ password_hash: string | null }>();
+  return c.json({ ok: true, needsPassword: !u?.password_hash });
 });
 
 app.post("/api/auth/logout", guard, async (c) => { await endSession(c); return c.json({ ok: true }); });
 
+const MODES = ["light", "dark", "system"];
+const ACCENTS = ["forest", "ocean", "sunset", "berry", "violet", "graphite"];
+
+// Sign in with email and password. "Remember me" keeps the session for 30 days.
+app.post("/api/auth/login", async (c) => {
+  const b = await readJson(c);
+  if (!b) return c.json({ error: "Invalid request" }, 400);
+  const ip = clientIp(c);
+  const email = cleanEmail(b.email);
+  const password = typeof b.password === "string" ? b.password : "";
+  if (!email || !password || password.length > 200) return c.json({ error: "Enter your email and password." }, 400);
+  const key = await hmacHash(c.env.SESSION_SECRET, email);
+  if (!(await hit(c.env, `lg-ip:${ip}`, 20, 900)) || !(await hit(c.env, `lg-em:${key}`, 8, 900))) {
+    return c.json({ error: "Too many attempts. Wait 15 minutes, or email yourself a sign-in link instead." }, 429);
+  }
+  if (!(await verifyTurnstile(c.env, b.turnstileToken, ip))) return c.json({ error: "Please complete the check and try again." }, 400);
+  const u = await c.env.DB.prepare("SELECT id, password_hash FROM users WHERE email = ?").bind(email).first<{ id: string; password_hash: string | null }>();
+  const ok = await verifyPassword(password, u?.password_hash ?? null);
+  if (!u || !ok) {
+    return c.json({ error: "That email and password don't match. If you haven't set a password yet, email yourself a sign-in link instead." }, 401);
+  }
+  await startSession(c, u.id, { remember: b.remember === true, via: "password" });
+  return c.json({ ok: true });
+});
+
+// Set or change the password. Changing needs the current one, unless you signed in by email link in the last 30 minutes
+// (that is how a forgotten password is reset). Other devices are signed out afterwards.
+app.post("/api/password", guard, async (c) => {
+  const user = c.get("user")!;
+  const b = await readJson(c);
+  if (!b) return c.json({ error: "Invalid request" }, 400);
+  if (!(await hit(c.env, `pw:${user.id}`, 10, 3600))) return c.json({ error: "Too many tries. Try again later." }, 429);
+  const row = await c.env.DB.prepare("SELECT password_hash FROM users WHERE id = ?").bind(user.id).first<{ password_hash: string | null }>();
+  const recentLink = c.get("via") === "link" && Date.now() - Date.parse(c.get("sessionCreated") ?? "") < 30 * 60e3;
+  if (row?.password_hash && !recentLink && !(await verifyPassword(String(b.current ?? ""), row.password_hash))) {
+    return c.json({ error: "Your current password is not right." }, 403);
+  }
+  const password = String(b.password ?? "");
+  const problem = checkPassword(password, user.email);
+  if (problem) return c.json({ error: problem }, 400);
+  await c.env.DB.batch([
+    c.env.DB.prepare("UPDATE users SET password_hash = ?, password_set_at = ? WHERE id = ?").bind(await hashPassword(password), nowIso(), user.id),
+    c.env.DB.prepare("DELETE FROM sessions WHERE user_id = ? AND id_hash != ?").bind(user.id, c.get("sidHash") ?? ""),
+  ]);
+  return c.json({ ok: true });
+});
+
+// Appearance (colour and light/dark) follows the person to any device.
+app.put("/api/prefs", guard, async (c) => {
+  const b = await readJson(c);
+  if (!b || !MODES.includes(b.mode) || !ACCENTS.includes(b.accent)) return c.json({ error: "Invalid choice" }, 400);
+  await c.env.DB.prepare("UPDATE users SET prefs = ? WHERE id = ?").bind(JSON.stringify({ mode: b.mode, accent: b.accent }), c.get("user")!.id).run();
+  return c.json({ ok: true });
+});
+
 app.get("/api/me", guard, async (c) => {
   const u = c.get("user")!;
-  const business = await c.env.DB.prepare(
-    "SELECT name, reply_to AS replyTo, free_until AS freeUntil, referral_code AS referralCode FROM businesses WHERE user_id = ?",
-  ).bind(u.id).first();
-  return c.json({ email: u.email, isAdmin: isAdminEmail(c.env, u.email), csrf: c.get("csrf"), business });
+  const biz = await c.env.DB.prepare(
+    `SELECT name, reply_to AS replyTo, free_until AS freeUntil, referral_code AS referralCode, founding,
+            plan, sub_status AS subStatus, sub_renews_at AS subRenewsAt FROM businesses WHERE user_id = ?`,
+  ).bind(u.id).first<any>();
+  const row = await c.env.DB.prepare("SELECT password_hash, prefs FROM users WHERE id = ?").bind(u.id).first<{ password_hash: string | null; prefs: string | null }>();
+  let prefs: { mode: string; accent: string } | null = null;
+  try { prefs = row?.prefs ? JSON.parse(row.prefs) : null; } catch { /* ignore */ }
+  const enforced = c.env.BILLING_ENABLED === "true";
+  const access = biz ? accessInfo({ free_until: biz.freeUntil, sub_status: biz.subStatus, sub_renews_at: biz.subRenewsAt, plan: biz.plan, founding: biz.founding }, enforced) : null;
+  return c.json({
+    email: u.email, isAdmin: isAdminEmail(c.env, u.email), csrf: c.get("csrf"),
+    hasPassword: !!row?.password_hash,
+    canResetPassword: c.get("via") === "link" && Date.now() - Date.parse(c.get("sessionCreated") ?? "") < 30 * 60e3,
+    prefs, access,
+    business: biz && { name: biz.name, replyTo: biz.replyTo, freeUntil: biz.freeUntil, referralCode: biz.referralCode, founding: biz.founding === 1 },
+  });
 });
 
 // Called by Vercel Cron or an outside timer. Needs: Authorization: Bearer <CRON_SECRET>
@@ -153,6 +225,7 @@ app.get("/sitemap.xml", (c) => c.body(
   200, { "Content-Type": "application/xml; charset=utf-8" }));
 
 app.route("/api", pub);
+app.route("/api/billing", billing);
 app.route("/api/admin", admin);
 app.route("/api/quotes", quotes);
 app.route("/api/settings", settings);

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { asAppearance, setAppearance } from "./theme";
 
 let csrf = "";
 
@@ -20,6 +21,7 @@ export async function api<T = any>(path: string, opts: { method?: string; body?:
 export type Config = {
   name: string; turnstileSiteKey: string; contactEmail: string;
   company: { name: string; number: string; address: string };
+  billing: { enabled: boolean; foundingPercent: number; plans: PlanInfo[] };
 };
 let cfgPromise: Promise<Config> | null = null;
 export function useConfig(): Config | null {
@@ -31,9 +33,12 @@ export function useConfig(): Config | null {
   return cfg;
 }
 
+export type PlanInfo = { id: "monthly" | "annual"; label: string; interval: string; price: number; foundingPrice: number | null };
+export type Access = { state: "free" | "subscribed" | "past_due" | "cancelled" | "expired"; allowed: boolean; enforced: boolean; daysLeft: number | null; until: string | null };
 export type Me = {
+  hasPassword: boolean; canResetPassword: boolean; prefs: { mode: string; accent: string } | null; access: Access | null;
   email: string; isAdmin: boolean; csrf: string;
-  business: { name: string; replyTo: string; freeUntil: string; referralCode: string } | null;
+  business: { name: string; replyTo: string; freeUntil: string; referralCode: string; founding: boolean } | null;
 };
 // Loads the signed-in user, or sends the visitor to the sign-in page.
 export function useMe(): Me | null {
@@ -43,6 +48,8 @@ export function useMe(): Me | null {
     api<Me>("/api/me").then((r) => {
       if (!r.ok) return nav("/signin", { replace: true });
       csrf = r.data.csrf;
+      const saved = asAppearance(r.data.prefs);
+      if (saved) setAppearance(saved);
       setMe(r.data);
     });
   }, [nav]);

@@ -1,5 +1,5 @@
 import { createClient, type InValue, type ResultSet } from "@libsql/client/web";
-import { SCHEMA } from "./schema.js";
+import { SCHEMA, MIGRATIONS, MIGRATION_VERSION } from "./schema.js";
 
 type Row = Record<string, unknown>;
 const toRows = (r: ResultSet): Row[] =>
@@ -25,10 +25,17 @@ export function makeDb(url: string, authToken: string): Db {
   let ready: Promise<void> | null = null;
   // Creates any missing tables the first time the API runs after a cold start.
   const ensure = () =>
-    (ready ??= client
-      .batch(SCHEMA.map((sql) => ({ sql, args: [] })), "write")
-      .then(() => undefined)
-      .catch((e) => { ready = null; throw e; }));
+    (ready ??= (async () => {
+      await client.batch(SCHEMA.map((sql) => ({ sql, args: [] })), "write");
+      const v = Number((await client.execute("SELECT v FROM schema_meta WHERE k = 'version'")).rows[0]?.v ?? 0);
+      if (v < MIGRATION_VERSION) {
+        for (const [table, column, ddl] of MIGRATIONS) {
+          try { await client.execute(`ALTER TABLE ${table} ADD COLUMN ${column} ${ddl}`); }
+          catch (e) { if (!/duplicate column/i.test(String(e))) throw e; } // already there
+        }
+        await client.execute({ sql: "INSERT OR REPLACE INTO schema_meta (k, v) VALUES ('version', ?)", args: [String(MIGRATION_VERSION)] });
+      }
+    })().catch((e) => { ready = null; throw e; }));
   const exec = async (sql: string, args: InValue[]) => { await ensure(); return client.execute({ sql, args }); };
 
   const make = (sql: string, args: InValue[] = []): Stmt => ({

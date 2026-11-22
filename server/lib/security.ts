@@ -54,6 +54,8 @@ function requestOrigin(c: Context<HC>): string {
 
 // Every state-changing request must come from this site's own origin.
 export const originCheck = createMiddleware<HC>(async (c, next) => {
+  // Payment webhooks come from the billing provider, not a browser. They are checked by signature instead.
+  if (c.req.path === "/api/billing/webhook") return next();
   if (!["GET", "HEAD", "OPTIONS"].includes(c.req.method)) {
     const o = c.req.header("Origin");
     if (!o || o !== requestOrigin(c)) return c.json({ error: "Forbidden" }, 403);
@@ -66,12 +68,15 @@ export const loadSession = createMiddleware<HC>(async (c, next) => {
   if (sid && sid.length < 100) {
     const h = await hmacHash(c.env.SESSION_SECRET, sid);
     const row = await c.env.DB.prepare(
-      `SELECT u.id, u.email, s.csrf FROM sessions s JOIN users u ON u.id = s.user_id
+      `SELECT u.id, u.email, s.csrf, s.via, s.created_at AS created FROM sessions s JOIN users u ON u.id = s.user_id
        WHERE s.id_hash = ? AND s.expires_at > ?`,
-    ).bind(h, nowIso()).first<{ id: string; email: string; csrf: string }>();
+    ).bind(h, nowIso()).first<{ id: string; email: string; csrf: string; via: string; created: string }>();
     if (row) {
       c.set("user", { id: row.id, email: row.email });
       c.set("csrf", row.csrf);
+      c.set("sidHash", h);
+      c.set("via", row.via);
+      c.set("sessionCreated", row.created);
     }
   }
   await next();
@@ -96,18 +101,20 @@ export const adminOnly = createMiddleware<HC>(async (c, next) => {
   await next();
 });
 
-export async function startSession(c: Context<HC>, userId: string) {
+// "Remember me" gives a 30 day cookie. Without it the cookie ends when the browser closes and the session lasts 12 hours.
+export async function startSession(c: Context<HC>, userId: string, opts: { remember: boolean; via: "password" | "link" }) {
   const sid = randomToken();
   const now = Date.now();
+  const ttl = opts.remember ? SESSION_DAYS * 864e5 : 12 * 36e5;
   await c.env.DB.batch([
-    c.env.DB.prepare("INSERT INTO sessions (id_hash, user_id, csrf, expires_at, created_at) VALUES (?,?,?,?,?)")
+    c.env.DB.prepare("INSERT INTO sessions (id_hash, user_id, csrf, expires_at, created_at, via) VALUES (?,?,?,?,?,?)")
       .bind(await hmacHash(c.env.SESSION_SECRET, sid), userId, randomToken(16),
-        new Date(now + SESSION_DAYS * 864e5).toISOString(), new Date(now).toISOString()),
+        new Date(now + ttl).toISOString(), new Date(now).toISOString(), opts.via),
     c.env.DB.prepare("UPDATE users SET last_login_at = ? WHERE id = ?").bind(new Date(now).toISOString(), userId),
     c.env.DB.prepare("DELETE FROM sessions WHERE expires_at < ?").bind(new Date(now).toISOString()),
   ]);
   setCookie(c, COOKIE, sid, {
-    httpOnly: true, secure: true, sameSite: "Lax", path: "/", maxAge: SESSION_DAYS * 86400,
+    httpOnly: true, secure: true, sameSite: "Lax", path: "/", ...(opts.remember ? { maxAge: SESSION_DAYS * 86400 } : {}),
   });
 }
 

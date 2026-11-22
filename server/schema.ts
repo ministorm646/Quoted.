@@ -4,7 +4,10 @@ export const SCHEMA: string[] = [
   id TEXT PRIMARY KEY,
   email TEXT NOT NULL UNIQUE,
   created_at TEXT NOT NULL,
-  last_login_at TEXT
+  last_login_at TEXT,
+  password_hash TEXT,
+  password_set_at TEXT,
+  prefs TEXT
 )`,
   `CREATE TABLE IF NOT EXISTS waitlist (
   id TEXT PRIMARY KEY,
@@ -26,7 +29,14 @@ export const SCHEMA: string[] = [
   free_until TEXT NOT NULL,
   referral_code TEXT NOT NULL UNIQUE,
   referred_by TEXT REFERENCES businesses(id),
-  created_at TEXT NOT NULL
+  created_at TEXT NOT NULL,
+  founding INTEGER NOT NULL DEFAULT 1,
+  plan TEXT,
+  sub_status TEXT NOT NULL DEFAULT 'none',
+  sub_renews_at TEXT,
+  provider_sub_id TEXT,
+  portal_url TEXT,
+  sub_updated_at TEXT
 )`,
   `CREATE TABLE IF NOT EXISTS quotes (
   id TEXT PRIMARY KEY,
@@ -69,7 +79,8 @@ export const SCHEMA: string[] = [
   user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   csrf TEXT NOT NULL,
   expires_at TEXT NOT NULL,
-  created_at TEXT NOT NULL
+  created_at TEXT NOT NULL,
+  via TEXT NOT NULL DEFAULT 'link'
 )`,
   `CREATE INDEX IF NOT EXISTS idx_sessions_exp ON sessions(expires_at)`,
   `CREATE TABLE IF NOT EXISTS login_tokens (
@@ -93,4 +104,21 @@ export const SCHEMA: string[] = [
   n INTEGER NOT NULL,
   exp INTEGER NOT NULL
 )`,
+  `CREATE TABLE IF NOT EXISTS schema_meta (k TEXT PRIMARY KEY, v TEXT NOT NULL)`,
+];
+
+// Columns added after the first release. Run once per database (tracked in schema_meta).
+export const MIGRATION_VERSION = 1;
+export const MIGRATIONS: [table: string, column: string, ddl: string][] = [
+  ["users", "password_hash", "TEXT"],
+  ["users", "password_set_at", "TEXT"],
+  ["users", "prefs", "TEXT"],
+  ["sessions", "via", "TEXT NOT NULL DEFAULT 'link'"],
+  ["businesses", "founding", "INTEGER NOT NULL DEFAULT 1"],
+  ["businesses", "plan", "TEXT"],
+  ["businesses", "sub_status", "TEXT NOT NULL DEFAULT 'none'"],
+  ["businesses", "sub_renews_at", "TEXT"],
+  ["businesses", "provider_sub_id", "TEXT"],
+  ["businesses", "portal_url", "TEXT"],
+  ["businesses", "sub_updated_at", "TEXT"],
 ];

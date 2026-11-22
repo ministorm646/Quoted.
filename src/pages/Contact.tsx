@@ -7,7 +7,8 @@ export default function Contact() {
   const mail = cfg?.contactEmail;
   return (
     <Shell>
-      <div className="max-w-xl">
+      <div className="lg:grid lg:grid-cols-2 lg:gap-12">
+      <div>
         <h1 className="text-3xl font-extrabold">Contact</h1>
         <p className="mt-3">Questions, problems, or a request about your data? Send us an email.</p>
         {mail && <p className="mt-5"><a className="btn btn-primary" href={`mailto:${mail}`}>{mail}</a></p>}
@@ -18,6 +19,15 @@ export default function Contact() {
           <li>If you got a follow-up email and no longer want them, use the Unsubscribe link at the bottom of that email. It stops all of them straight away.</li>
         </ul>
         <p className="mt-6 text-sm">Please don't send passwords or sign-in links by email. We will never ask for them.</p>
+      </div>
+      <aside className="panel p-5 mt-8 lg:mt-0 self-start">
+        <h2 className="font-bold text-lg">Before you write</h2>
+        <ul className="mt-3 space-y-2 text-sm list-disc pl-5">
+          <li>Tell us the email address you sign in with, so we can find your account.</li>
+          <li>If something isn't working, tell us what you tapped and what you saw.</li>
+          <li>Got a follow-up email you don't want? Use its Unsubscribe link and it stops straight away.</li>
+        </ul>
+      </aside>
       </div>
     </Shell>
   );

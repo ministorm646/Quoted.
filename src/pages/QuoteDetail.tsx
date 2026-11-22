@@ -68,7 +68,8 @@ function View() {
     <>
       {party && <Celebrate onDone={done} />}
       <Link to="/app" className="link text-sm">All quotes</Link>
-      <div className="hard-card p-5 mt-3">
+      <div className="mt-3 lg:grid lg:grid-cols-[minmax(0,1fr)_380px] lg:gap-8 lg:items-start"><div>
+      <div className="hard-card p-5">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <h1 className="text-2xl font-extrabold break-words">{q.clientName}</h1>
@@ -98,19 +99,20 @@ function View() {
         <button className="btn btn-ghost text-error" disabled={busy} onClick={() => dlg.current?.showModal()}>Delete</button>
       </div>
 
-      <h2 className="text-xl font-bold mt-8">What has happened</h2>
-      <ol className="mt-3 border-l-2 border-[#10231c] ml-2 space-y-4">
+      </div>
+      <aside className="panel p-5 mt-8 lg:mt-0"><h2 className="text-xl font-bold">What has happened</h2>
+      <ol className="mt-4 border-l-2 border-(--line) ml-2 space-y-4">
         {d.events.map((e, i) => (
           <li key={i} className="pl-4 relative">
-            <span className="absolute -left-[7px] top-1.5 h-3 w-3 rounded-full bg-[#0e7a55] border-2 border-[#10231c]" />
+            <span className="absolute -left-[7px] top-1.5 h-3 w-3 rounded-full bg-(--accent) border-2 border-(--line)" />
             <p className="font-medium">{EVENT_LABEL[e.type] ?? e.type}</p>
             <p className="text-sm">{fmtDateTime(e.createdAt)}</p>
           </li>
         ))}
-      </ol>
+      </ol></aside></div>
 
       <dialog ref={editDlg} className="modal">
-        <div className="modal-box border-2 border-[#10231c]">
+        <div className="modal-box border-2 border-(--line)">
           <h3 className="font-bold text-lg">Edit details</h3>
           <div className="mt-3 space-y-3">
             <label className="block"><span className="font-medium">Client name</span><input className="input input-bordered w-full mt-1" maxLength={80} value={edit.clientName} onChange={(e) => setEdit({ ...edit, clientName: e.target.value })} /></label>
@@ -127,7 +129,7 @@ function View() {
       </dialog>
 
       <dialog ref={dlg} className="modal">
-        <div className="modal-box border-2 border-[#10231c]">
+        <div className="modal-box border-2 border-(--line)">
           <h3 className="font-bold text-lg">Delete this quote?</h3>
           <p className="py-3">This removes it and its history. Follow-ups will stop. You can't undo this.</p>
           <div className="modal-action">
