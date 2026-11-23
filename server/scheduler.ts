@@ -3,6 +3,7 @@ import { sendEmail, type Mail, type SendResult } from "./lib/email.js";
 import { followupMail } from "./lib/followup.js";
 import { DEFAULT_SCHEDULE } from "./lib/template.js";
 import { ACCESS_WHERE } from "./billing.js";
+import { billingOn } from "./launch.js";
 
 const DAY = 864e5, HOUR = 36e5;
 const MAX_RETRIES = 3;      // failed sends before a quote is paused
@@ -47,6 +48,7 @@ export async function runScheduler(
   let sentToday = (await env.DB.prepare(`SELECT COUNT(*) AS n FROM events WHERE type IN ${COUNTED} AND created_at >= ?`)
     .bind(dayStart).first<{ n: number }>())?.n ?? 0;
 
+  const billingFlag = (await billingOn(env)) ? 1 : 0;
   const { results } = await env.DB.prepare(
     `SELECT q.id, q.business_id, q.client_name, q.client_email, q.description, q.sent_at, q.status,
             q.followups_sent, q.retry_count, q.last_sent_at, q.response_token,
@@ -55,7 +57,7 @@ export async function runScheduler(
      WHERE q.status IN ${OPEN} AND q.next_followup_at IS NOT NULL AND q.next_followup_at <= ?
        AND (? = 0 OR ${ACCESS_WHERE})
      ORDER BY q.next_followup_at LIMIT ?`,
-  ).bind(iso, env.BILLING_ENABLED === "true" ? 1 : 0, iso.slice(0, 10), iso.slice(0, 10), BATCH).all<Cand>();
+  ).bind(iso, billingFlag, iso.slice(0, 10), iso.slice(0, 10), BATCH).all<Cand>();
 
   const perBusiness = new Map<string, number>();
 

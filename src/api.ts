@@ -21,6 +21,7 @@ export async function api<T = any>(path: string, opts: { method?: string; body?:
 export type Config = {
   name: string; turnstileSiteKey: string; contactEmail: string;
   company: { name: string; number: string; address: string };
+  launched: boolean; trialDays: number;
   billing: { enabled: boolean; foundingPercent: number; plans: PlanInfo[] };
 };
 let cfgPromise: Promise<Config> | null = null;
@@ -56,8 +57,8 @@ export function useMe(): Me | null {
   return me;
 }
 
-// Sets the browser tab title, e.g. "Privacy | QuoteMe".
+// Sets the browser tab title, e.g. "Privacy | Quoted.".
 export function usePageTitle(title: string) {
   const cfg = useConfig();
-  useEffect(() => { document.title = `${title} | ${cfg?.name ?? "QuoteMe"}`; }, [title, cfg]);
+  useEffect(() => { document.title = `${title} | ${cfg?.name ?? "Quoted"}.`; }, [title, cfg]);
 }

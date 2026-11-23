@@ -60,7 +60,7 @@ function Form() {
           <h2 className="font-bold text-lg">Tips</h2>
           <ul className="mt-3 space-y-2 text-sm">
             {["Use the email address the client wrote to you from.", "Keep the job to one line, such as \"Kitchen repaint\". It appears in the email.", "Only add people who asked you for a quote."].map((t) => (
-              <li key={t} className="flex gap-2"><span className="mt-0.5 text-(--accent)"><Icon name="check" size={16} /></span>{t}</li>))}
+              <li key={t} className="flex gap-2"><span className="mt-0.5 text-(--accent-text)"><Icon name="check" size={16} /></span>{t}</li>))}
           </ul>
         </section>
       </aside>

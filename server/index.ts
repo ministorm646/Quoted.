@@ -17,6 +17,7 @@ import { toCsv } from "./lib/csv.js";
 import { billing } from "./billingRoutes.js";
 import { accessInfo, foundingPercent, plans } from "./billing.js";
 import { checkPassword, hashPassword, verifyPassword } from "./lib/password.js";
+import { billingOn, isLaunched, selfServeSignup, trialDays } from "./launch.js";
 import { quotes } from "./quotes.js";
 import { settings, account } from "./settings.js";
 
@@ -30,15 +31,18 @@ app.use("*", originCheck, loadSession);
 
 app.get("/api/health", (c) => c.json({ ok: true }));
 
-app.get("/api/config", (c) =>
-  c.json({ name: c.env.PRODUCT_NAME, turnstileSiteKey: c.env.TURNSTILE_SITE_KEY, contactEmail: c.env.SUPPORT_EMAIL,
-    company: { name: c.env.COMPANY_NAME, number: c.env.COMPANY_NUMBER, address: c.env.COMPANY_ADDRESS },
-    billing: { enabled: c.env.BILLING_ENABLED === "true", foundingPercent: foundingPercent(c.env), plans: plans(c.env, false) } }));
+app.get("/api/config", async (c) => c.json({
+  name: c.env.PRODUCT_NAME, turnstileSiteKey: c.env.TURNSTILE_SITE_KEY, contactEmail: c.env.SUPPORT_EMAIL,
+  company: { name: c.env.COMPANY_NAME, number: c.env.COMPANY_NUMBER, address: c.env.COMPANY_ADDRESS },
+  launched: await isLaunched(c.env.DB), trialDays: trialDays(c.env),
+  billing: { enabled: await billingOn(c.env), foundingPercent: foundingPercent(c.env), plans: plans(c.env, false) },
+}));
 
 // Early-access request. Always answers the same way, so nobody can probe the list.
 app.post("/api/waitlist", async (c) => {
   const b = await readJson(c);
   if (!b) return c.json({ error: "Invalid request" }, 400);
+  if (await isLaunched(c.env.DB)) return c.json({ error: "Early access has ended. You can start a free trial instead.", code: "closed" }, 409);
   const ip = clientIp(c);
   if (!(await hit(c.env, `wl:${ip}`, 5, 3600))) return c.json({ error: "Too many requests. Try again later." }, 429);
   const email = cleanEmail(b.email);
@@ -56,6 +60,29 @@ app.post("/api/waitlist", async (c) => {
     "INSERT OR IGNORE INTO waitlist (id, email, answers, ref, status, created_at) VALUES (?,?,?,?, 'pending', ?)",
   ).bind(newId(), email, JSON.stringify(answers), ref, nowIso()).run();
   return c.json({ ok: true });
+});
+
+// After launch anyone can sign up. They get a free trial, then must subscribe.
+app.post("/api/signup", async (c) => {
+  const b = await readJson(c);
+  if (!b) return c.json({ error: "Invalid request" }, 400);
+  if (!(await isLaunched(c.env.DB))) return c.json({ error: "Sign-up isn't open yet. You can ask for early access instead.", code: "not_open" }, 409);
+  const ip = clientIp(c);
+  const email = cleanEmail(b.email);
+  if (!email) return c.json({ error: "Enter a valid email address." }, 400);
+  if (b.agree !== true) return c.json({ error: "Please agree to the terms and the privacy notice." }, 400);
+  const key = await hmacHash(c.env.SESSION_SECRET, email);
+  if (!(await hit(c.env, `su-ip:${ip}`, 5, 3600)) || !(await hit(c.env, `su-em:${key}`, 3, 900))) {
+    return c.json({ error: "Too many requests. Try again in a few minutes." }, 429);
+  }
+  if (!(await verifyTurnstile(c.env, b.turnstileToken, ip))) return c.json({ error: "Please complete the check and try again." }, 400);
+  const ref = typeof b.ref === "string" && /^[A-Za-z0-9]{6,16}$/.test(b.ref) ? b.ref.toUpperCase() : null;
+  const { userId, isNew } = await selfServeSignup(c.env, { email, businessName: cleanText(b.businessName, 80) || "My business", ref });
+  c.executionCtx.waitUntil((async () => {
+    const token = await makeLoginToken(c.env, userId, "login", 60 * 60);
+    await sendEmail(c.env, signInEmail(c.env, email, token, false, isNew));
+  })());
+  return c.json({ ok: true, message: "Check your email for a link to get started." }); // the same answer for new and existing emails
 });
 
 // Ask for a sign-in link. Same answer whether or not the email is approved.
@@ -117,7 +144,7 @@ app.post("/api/auth/verify", async (c) => {
 app.post("/api/auth/logout", guard, async (c) => { await endSession(c); return c.json({ ok: true }); });
 
 const MODES = ["light", "dark", "system"];
-const ACCENTS = ["forest", "ocean", "sunset", "berry", "violet", "graphite"];
+const ACCENTS = ["signature", "forest", "ocean", "sunset", "berry", "violet", "graphite"];
 
 // Sign in with email and password. "Remember me" keeps the session for 30 days.
 app.post("/api/auth/login", async (c) => {
@@ -180,7 +207,7 @@ app.get("/api/me", guard, async (c) => {
   const row = await c.env.DB.prepare("SELECT password_hash, prefs FROM users WHERE id = ?").bind(u.id).first<{ password_hash: string | null; prefs: string | null }>();
   let prefs: { mode: string; accent: string } | null = null;
   try { prefs = row?.prefs ? JSON.parse(row.prefs) : null; } catch { /* ignore */ }
-  const enforced = c.env.BILLING_ENABLED === "true";
+  const enforced = await billingOn(c.env);
   const access = biz ? accessInfo({ free_until: biz.freeUntil, sub_status: biz.subStatus, sub_renews_at: biz.subRenewsAt, plan: biz.plan, founding: biz.founding }, enforced) : null;
   return c.json({
     email: u.email, isAdmin: isAdminEmail(c.env, u.email), csrf: c.get("csrf"),

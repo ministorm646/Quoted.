@@ -10,6 +10,7 @@ import { creditReferral } from "./referrals.js";
 import { sendEmail } from "./lib/email.js";
 import { followupMail } from "./lib/followup.js";
 import { accessInfo } from "./billing.js";
+import { billingOn } from "./launch.js";
 
 export const quotes = new Hono<HC>();
 
@@ -65,7 +66,7 @@ quotes.post("/", async (c) => {
   const { clientName, clientEmail, amountPence, description } = parsed.value;
 
   const biz = c.get("biz")!;
-  if (!accessInfo(biz, c.env.BILLING_ENABLED === "true").allowed) {
+  if (!accessInfo(biz, await billingOn(c.env)).allowed) {
     return c.json({ error: "Your free period has ended. Choose a plan to keep adding quotes and sending follow-ups.", code: "billing" }, 402);
   }
   const now = Date.now();

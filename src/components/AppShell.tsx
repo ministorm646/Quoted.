@@ -21,7 +21,7 @@ function Banners({ me }: { me: Me }) {
   else if (a?.state === "past_due") items.push(
     <div key="p" role="alert" className={`${box} border-warning`}><p className="font-medium">Your last payment didn't go through. Update your card to keep follow-ups running.</p><Link to="/app/billing" className="btn btn-primary btn-sm">Fix payment</Link></div>);
   else if (a?.enforced && a.state === "free" && a.daysLeft !== null && a.daysLeft <= 14) items.push(
-    <div key="t" className={`${box} callout`}><p className="font-medium">{a.daysLeft} day{a.daysLeft === 1 ? "" : "s"} left of your free period.{me.business?.founding ? " Founding members get a discount." : ""}</p><Link to="/app/billing" className="btn btn-primary btn-sm">See plans</Link></div>);
+    <div key="t" className={`${box} callout`}><p className="font-medium">{a.daysLeft} day{a.daysLeft === 1 ? "" : "s"} left of your free {me.business?.founding ? "period" : "trial"}.{me.business?.founding ? " Founding members get a discount." : ""}</p><Link to="/app/billing" className="btn btn-primary btn-sm">See plans</Link></div>);
   if (!me.hasPassword) items.push(
     <div key="w" className={box}><p className="font-medium">Set a password so you can sign in faster next time.</p><Link to="/app/password" className="btn btn-outline btn-sm">Set a password</Link></div>);
   return items.length ? <div className="space-y-3 mb-5">{items}</div> : null;
@@ -36,7 +36,7 @@ export default function AppShell({ children }: { children: ReactNode | ((me: Me)
   const side = ({ isActive }: { isActive: boolean }) =>
     `flex items-center gap-3 rounded-lg px-3 py-2.5 font-medium border-2 ${isActive ? "bg-(--accent) text-(--accent-content) border-(--accent)" : "border-transparent hover:bg-(--paper)"}`;
   const tab = ({ isActive }: { isActive: boolean }) =>
-    `flex flex-1 flex-col items-center justify-center gap-0.5 py-2 text-[11px] font-medium ${isActive ? "text-(--accent)" : "opacity-80"}`;
+    `flex flex-1 flex-col items-center justify-center gap-0.5 py-2 text-[11px] font-medium ${isActive ? "text-(--accent-text)" : "opacity-80"}`;
   const a = me?.access;
   const status = !a ? "" : a.state === "subscribed" ? "Subscribed" : a.state === "past_due" ? "Payment due" : a.state === "cancelled" ? `Ends ${a.until}` : a.state === "expired" ? "Free period ended" : `Free until ${a.until}`;
 

@@ -1,27 +1,29 @@
 @import "tailwindcss";
 @plugin "daisyui";
+
+/* Light */
 @plugin "daisyui/theme" {
   name: "nudge";
   default: true;
   color-scheme: light;
   --color-base-100: #ffffff;
-  --color-base-200: #f4f6f3;
-  --color-base-300: #dfe5de;
-  --color-base-content: #10231c;
-  --color-primary: #0e7a55;
+  --color-base-200: #f7f6f2;
+  --color-base-300: #e4e2dc;
+  --color-base-content: #12121a;
+  --color-primary: #2a3fff;
   --color-primary-content: #ffffff;
-  --color-secondary: #ffd84d;
-  --color-secondary-content: #10231c;
-  --color-accent: #ffd84d;
-  --color-accent-content: #10231c;
-  --color-neutral: #10231c;
-  --color-neutral-content: #f4f6f3;
-  --color-info: #2563a8;
+  --color-secondary: #ffe14d;
+  --color-secondary-content: #12121a;
+  --color-accent: #ffe14d;
+  --color-accent-content: #12121a;
+  --color-neutral: #12121a;
+  --color-neutral-content: #f7f6f2;
+  --color-info: #0b6cb5;
   --color-info-content: #ffffff;
   --color-success: #0e7a55;
   --color-success-content: #ffffff;
   --color-warning: #f2b705;
-  --color-warning-content: #10231c;
+  --color-warning-content: #12121a;
   --color-error: #b3261e;
   --color-error-content: #ffffff;
   --radius-selector: 0.5rem;
@@ -34,25 +36,26 @@
   --noise: 0;
 }
 
+/* Dark: neutral greys, like a normal dark mode */
 @plugin "daisyui/theme" {
   name: "nudge-dark";
   color-scheme: dark;
-  --color-base-100: #15211b;
-  --color-base-200: #0d1612;
-  --color-base-300: #26382f;
-  --color-base-content: #e7efe9;
-  --color-primary: #34d399;
-  --color-primary-content: #052e1f;
-  --color-secondary: #fde68a;
-  --color-secondary-content: #2b1f00;
-  --color-accent: #fde68a;
-  --color-accent-content: #2b1f00;
-  --color-neutral: #3d5a4c;
-  --color-neutral-content: #e7efe9;
+  --color-base-100: #1a1a1c;
+  --color-base-200: #0f0f10;
+  --color-base-300: #2a2a2e;
+  --color-base-content: #f2f2f3;
+  --color-primary: #8e9bff;
+  --color-primary-content: #0b1033;
+  --color-secondary: #ffe14d;
+  --color-secondary-content: #1a1500;
+  --color-accent: #ffe14d;
+  --color-accent-content: #1a1500;
+  --color-neutral: #3f3f46;
+  --color-neutral-content: #f2f2f3;
   --color-info: #60a5fa;
   --color-info-content: #0b1b33;
-  --color-success: #34d399;
-  --color-success-content: #052e1f;
+  --color-success: #4ade80;
+  --color-success-content: #052e16;
   --color-warning: #fbbf24;
   --color-warning-content: #2b1f00;
   --color-error: #f87171;
@@ -74,18 +77,18 @@
 
 /* Colours that follow the chosen mode and accent (set in theme.ts). */
 :root, [data-theme="nudge"] {
-  --ink: #10231c; --paper: #f4f6f3; --card: #ffffff; --line: #10231c; --line-soft: #dfe5de; --muted: #4a5b53; --shadow: #10231c;
-  --accent: #0e7a55; --accent-content: #ffffff; --highlight: #ffd84d;
+  --ink: #12121a; --paper: #f7f6f2; --card: #ffffff; --line: #12121a; --line-soft: #e4e2dc; --muted: #55555f; --shadow: #12121a;
+  --accent: #2a3fff; --accent-text: #2a3fff; --accent-content: #ffffff; --highlight: #ffe14d; --highlight-solid: #ffe14d;
 }
 [data-theme="nudge-dark"] {
-  --ink: #e7efe9; --paper: #0d1612; --card: #15211b; --line: #3d5a4c; --line-soft: #26382f; --muted: #a3b5ab; --shadow: #000000;
+  --ink: #f2f2f3; --paper: #0f0f10; --card: #1a1a1c; --line: #3f3f46; --line-soft: #2a2a2e; --muted: #a1a1aa; --shadow: #000000;
 }
 html { background: var(--paper); }
 body { font-family: var(--font-sans); color: var(--ink); background: var(--paper); -webkit-font-smoothing: antialiased; }
 h1, h2, h3 { font-family: var(--font-display); letter-spacing: -0.01em; }
 .input, .select, .textarea { background-color: var(--card); color: var(--ink); border-color: var(--line); }
 .input::placeholder, .textarea::placeholder { color: var(--muted); opacity: 1; }
-.link { color: var(--accent); }
+.link { color: var(--accent-text); }
 details > summary { cursor: pointer; }
 
 /* Key cards: 2px border with a hard offset shadow. */
@@ -94,7 +97,7 @@ details > summary { cursor: pointer; }
 .hl { background: linear-gradient(transparent 55%, var(--highlight) 55%); padding: 0 0.15em; }
 .callout { background: color-mix(in srgb, var(--highlight) 40%, transparent); }
 
-:where(a, button, input, select, textarea):focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+:where(a, button, input, select, textarea):focus-visible { outline: 3px solid var(--accent-text); outline-offset: 2px; }
 .btn, .input, .select { min-height: 3rem; }
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
 

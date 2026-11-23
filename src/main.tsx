@@ -21,6 +21,8 @@ import Refer from "./pages/Refer";
 import AdminStats from "./pages/AdminStats";
 import SetPassword from "./pages/SetPassword";
 import Billing from "./pages/Billing";
+import Signup from "./pages/Signup";
+import AdminLaunch from "./pages/AdminLaunch";
 import Respond from "./pages/Respond";
 import Unsubscribe from "./pages/Unsubscribe";
 
@@ -41,6 +43,8 @@ createRoot(document.getElementById("root")!).render(
         <Route path="/app/settings" element={<Settings />} />
         <Route path="/admin" element={<Admin />} />
         <Route path="/admin/stats" element={<AdminStats />} />
+        <Route path="/admin/launch" element={<AdminLaunch />} />
+        <Route path="/signup" element={<Signup />} />
         <Route path="/privacy" element={<Privacy />} />
         <Route path="/terms" element={<Terms />} />
         <Route path="/contact" element={<Contact />} />

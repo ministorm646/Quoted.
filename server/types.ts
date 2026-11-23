@@ -28,6 +28,7 @@ export interface Env {
   LS_VARIANT_MONTHLY: string;
   LS_VARIANT_ANNUAL: string;
   LS_WEBHOOK_SECRET: string;
+  TRIAL_DAYS: string;
 }
 export type SessionUser = { id: string; email: string };
 export type HC = {

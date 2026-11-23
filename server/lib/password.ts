@@ -38,7 +38,7 @@ export function checkPassword(pw: string, email: string): string | null {
   if (pw.length > 128) return "Use 128 characters or fewer.";
   const lower = pw.toLowerCase();
   if (/^(.)\1+$/.test(pw) || new Set(pw).size < 5) return "Use a mix of different characters.";
-  if (COMMON.has(lower) || lower.includes("quoteme") || /^(password|qwerty|letmein)/.test(lower)) return "That password is too easy to guess.";
+  if (COMMON.has(lower) || lower.includes("quoted") || /^(password|qwerty|letmein)/.test(lower)) return "That password is too easy to guess.";
   const local = email.split("@")[0].toLowerCase();
   if (local.length >= 4 && lower.includes(local)) return "Don't use your email address inside your password.";
   return null;

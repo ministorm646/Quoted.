@@ -1,4 +1,4 @@
-# QuoteMe (working name) on Vercel
+# Quoted (working name) on Vercel
 
 Follow-ups for quotes that go quiet. Vite + React site, one Hono API served by a single Vercel Function, Turso (SQLite) database, Cloudflare Turnstile, Resend.
 
@@ -29,6 +29,7 @@ Open /api/health on your site: {"ok":true} means setup is complete. If it says "
 ## What is where
 
 - server/lib/password.ts: password hashing and rules. server/billing.ts and server/billingRoutes.ts: plans, founding discount, checkout link and the payment webhook.
+- server/launch.ts: the launch switch, readiness checklist, new-customer sign-up and the founding-member email. src/pages/AdminLaunch.tsx is its screen (/admin/launch).
 - src/theme.ts: light and dark mode and accent colours. src/components/AppShell.tsx: side menu on a computer, bottom tabs on a phone.
 
 ## Guides

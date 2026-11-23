@@ -24,7 +24,7 @@ export function buildEnv(): Env {
     SESSION_SECRET: e.SESSION_SECRET!,
     TURNSTILE_SECRET: e.TURNSTILE_SECRET!,
     TURNSTILE_SITE_KEY: e.TURNSTILE_SITE_KEY!,
-    PRODUCT_NAME: e.PRODUCT_NAME || "QuoteMe",
+    PRODUCT_NAME: e.PRODUCT_NAME || "Quoted",
     APP_URL: appUrl().replace(/\/$/, ""),
     FROM_EMAIL: e.FROM_EMAIL!,
     ADMIN_EMAIL: e.ADMIN_EMAIL!,
@@ -46,5 +46,6 @@ export function buildEnv(): Env {
     LS_VARIANT_MONTHLY: e.LS_VARIANT_MONTHLY ?? "",
     LS_VARIANT_ANNUAL: e.LS_VARIANT_ANNUAL ?? "",
     LS_WEBHOOK_SECRET: e.LS_WEBHOOK_SECRET ?? "",
+    TRIAL_DAYS: e.TRIAL_DAYS ?? "14",
   };
 }

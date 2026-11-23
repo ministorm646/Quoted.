@@ -1,10 +1,11 @@
 import { Hono } from "hono";
 import type { HC } from "./types.js";
-import { adminOnly, guard } from "./lib/security.js";
+import { adminOnly, guard, readJson } from "./lib/security.js";
 import { createUserWithBusiness, makeLoginToken, seatCap, seatsUsed } from "./lib/accounts.js";
 import { sendEmail, signInEmail } from "./lib/email.js";
 import { nowIso } from "./lib/util.js";
 import { loadStats } from "./stats.js";
+import { isLaunched, launchBlockers, launchCounts, launchedAt, readiness, sendLaunchEmails, setLaunched, subscriptionStats, trialFreeUntil } from "./launch.js";
 
 export const admin = new Hono<HC>();
 admin.use("*", guard, adminOnly);
@@ -23,7 +24,38 @@ admin.get("/waitlist", async (c) => {
   return c.json({ items, seats: { used: await seatsUsed(c.env), cap: seatCap(c.env) } });
 });
 
-admin.get("/stats", async (c) => c.json(await loadStats(c.env.DB, c.env.ADMIN_EMAIL.trim().toLowerCase())));
+admin.get("/stats", async (c) => {
+  const adminEmail = c.env.ADMIN_EMAIL.trim().toLowerCase();
+  return c.json({ ...(await loadStats(c.env.DB, adminEmail)), subscriptions: await subscriptionStats(c.env.DB, c.env, adminEmail) });
+});
+
+// ----- the launch switch -----
+admin.get("/launch", async (c) => {
+  const checks = readiness(c.env);
+  const launched = await isLaunched(c.env.DB);
+  return c.json({
+    launched, launchedAt: launched ? await launchedAt(c.env.DB) : null, checks, ready: launchBlockers(checks).length === 0,
+    counts: await launchCounts(c.env.DB, c.env.ADMIN_EMAIL.trim().toLowerCase()),
+  });
+});
+admin.post("/launch", async (c) => {
+  const b = await readJson(c);
+  if (b?.confirm !== "LAUNCH") return c.json({ error: "Type LAUNCH to confirm." }, 400);
+  const blockers = launchBlockers(readiness(c.env));
+  if (blockers.length) return c.json({ error: "Not ready to launch yet.", failing: blockers.map((x) => x.label) }, 409);
+  await setLaunched(c.env.DB, true);
+  return c.json({ ok: true });
+});
+admin.post("/reopen", async (c) => {
+  const b = await readJson(c);
+  if (b?.confirm !== "REOPEN") return c.json({ error: "Type REOPEN to confirm." }, 400);
+  await setLaunched(c.env.DB, false);
+  return c.json({ ok: true });
+});
+admin.post("/launch/emails", async (c) => {
+  if (!(await isLaunched(c.env.DB))) return c.json({ error: "Launch first." }, 409);
+  return c.json({ ok: true, ...(await sendLaunchEmails(c.env, 25)) });
+});
 
 admin.post("/waitlist/:id/approve", async (c) => {
   const env = c.env;
@@ -32,9 +64,10 @@ admin.post("/waitlist/:id/approve", async (c) => {
     .bind(id).first<{ id: string; email: string; answers: string; ref: string | null }>();
   if (!w) return c.json({ error: "Not found" }, 404);
 
+  const launched = await isLaunched(env.DB);
   let user = await env.DB.prepare("SELECT id FROM users WHERE email = ?").bind(w.email).first<{ id: string }>();
   if (!user) {
-    if ((await seatsUsed(env)) >= seatCap(env)) {
+    if (!launched && (await seatsUsed(env)) >= seatCap(env)) {
       return c.json({ error: "All seats are taken. Raise SEAT_CAP to approve more." }, 409);
     }
     let a: { businessName?: string } = {};
@@ -44,7 +77,8 @@ admin.post("/waitlist/:id/approve", async (c) => {
       const r = await env.DB.prepare("SELECT id FROM businesses WHERE referral_code = ?").bind(w.ref).first<{ id: string }>();
       referredBy = r?.id ?? null;
     }
-    user = await createUserWithBusiness(env, w.email, a.businessName || "My business", referredBy);
+    // After launch, approved people are ordinary customers on a trial, not founding members.
+    user = await createUserWithBusiness(env, w.email, a.businessName || "My business", referredBy, launched ? 0 : 1, launched ? trialFreeUntil(env) : undefined);
   }
   await env.DB.prepare("UPDATE waitlist SET status = 'approved', decided_at = ? WHERE id = ?").bind(nowIso(), id).run();
   const token = await makeLoginToken(env, user.id, "invite", 7 * 24 * 3600);

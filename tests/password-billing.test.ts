@@ -30,7 +30,7 @@ test("password: unicode forms of the same password match", async () => {
 test("password rules", () => {
   assert.match(checkPassword("short", "a@b.co")!, /10 characters/);
   assert.ok(checkPassword("x".repeat(129), "a@b.co"));
-  assert.ok(checkPassword("aaaaaaaaaaaa", "a@b.co")); assert.ok(checkPassword("password123", "a@b.co")); assert.ok(checkPassword("MyQuoteMe2026!", "a@b.co"));
+  assert.ok(checkPassword("aaaaaaaaaaaa", "a@b.co")); assert.ok(checkPassword("password123", "a@b.co")); assert.ok(checkPassword("MyQuoted2026!", "a@b.co"));
   assert.ok(checkPassword("sam.taylor-is-great", "sam.taylor@x.co"));
   assert.equal(checkPassword("correct horse battery staple", "sam@x.co"), null);
 });

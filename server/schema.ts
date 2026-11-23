@@ -36,7 +36,8 @@ export const SCHEMA: string[] = [
   sub_renews_at TEXT,
   provider_sub_id TEXT,
   portal_url TEXT,
-  sub_updated_at TEXT
+  sub_updated_at TEXT,
+  launch_emailed_at TEXT
 )`,
   `CREATE TABLE IF NOT EXISTS quotes (
   id TEXT PRIMARY KEY,
@@ -105,10 +106,11 @@ export const SCHEMA: string[] = [
   exp INTEGER NOT NULL
 )`,
   `CREATE TABLE IF NOT EXISTS schema_meta (k TEXT PRIMARY KEY, v TEXT NOT NULL)`,
+  `CREATE TABLE IF NOT EXISTS app_settings (k TEXT PRIMARY KEY, v TEXT NOT NULL, updated_at TEXT NOT NULL)`,
 ];
 
 // Columns added after the first release. Run once per database (tracked in schema_meta).
-export const MIGRATION_VERSION = 1;
+export const MIGRATION_VERSION = 2;
 export const MIGRATIONS: [table: string, column: string, ddl: string][] = [
   ["users", "password_hash", "TEXT"],
   ["users", "password_set_at", "TEXT"],
@@ -121,4 +123,5 @@ export const MIGRATIONS: [table: string, column: string, ddl: string][] = [
   ["businesses", "provider_sub_id", "TEXT"],
   ["businesses", "portal_url", "TEXT"],
   ["businesses", "sub_updated_at", "TEXT"],
+  ["businesses", "launch_emailed_at", "TEXT"],
 ];

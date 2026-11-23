@@ -27,7 +27,7 @@ function View() {
   const a = b.access;
   const head = a.state === "subscribed" ? `You're subscribed${b.plan ? ` (${b.plan})` : ""}`
     : a.state === "past_due" ? "Your last payment didn't go through"
-    : a.state === "cancelled" ? "Your subscription is cancelled" : a.state === "expired" ? "Your free period has ended" : "You're on free early access";
+    : a.state === "cancelled" ? "Your subscription is cancelled" : a.state === "expired" ? "Your free period has ended" : b.founding ? "You're on free early access" : "You're on your free trial";
   const detail = a.state === "subscribed" ? (b.renews ? `Renews on ${b.renews}.` : "")
     : a.state === "past_due" ? "Update your payment details to keep follow-ups running."
     : a.state === "cancelled" ? `You keep full access until ${a.until}.`
@@ -52,7 +52,7 @@ function View() {
           <h2 className="font-bold text-lg">Every plan includes</h2>
           <ul className="mt-3 space-y-2 text-sm">
             {["Automatic follow-ups in your name", "One-tap client replies", "Dashboard, search and CSV download", "Referral months for friends you bring"].map((t) => (
-              <li key={t} className="flex gap-2"><span className="mt-0.5 text-(--accent)"><Icon name="check" size={16} /></span>{t}</li>))}
+              <li key={t} className="flex gap-2"><span className="mt-0.5 text-(--accent-text)"><Icon name="check" size={16} /></span>{t}</li>))}
           </ul>
         </aside>
       </div>

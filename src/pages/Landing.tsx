@@ -15,15 +15,17 @@ const LINKS: [string, string][] = [["#how", "How it works"], ["#email", "Sample 
 
 function Header() {
   const cfg = useConfig();
-  const links = cfg?.billing.enabled ? [...LINKS.slice(0, 3), ["#pricing", "Pricing"], LINKS[3]] : LINKS;
+  const launched = !!cfg?.launched;
+  const links = launched ? [...LINKS.slice(0, 3), ["#pricing", "Pricing"]] : cfg?.billing.enabled ? [...LINKS.slice(0, 3), ["#pricing", "Pricing"], LINKS[3]] : LINKS;
   const [open, setOpen] = useState(false);
   return (
     <header className="sticky top-0 z-20 bg-(--card) border-b-2 border-(--line)">
       <div className="mx-auto max-w-6xl px-4 h-16 flex items-center justify-between">
-        <Link to="/" aria-label={`${cfg?.name ?? "QuoteMe"} home`}><Logo name={cfg?.name} /></Link>
+        <Link to="/" aria-label={`${cfg?.name ?? "Quoted"} home`}><Logo name={cfg?.name} /></Link>
         <nav className="hidden md:flex items-center gap-5" aria-label="Main">
           {links.map(([h, l]) => <a key={h} href={h} className="font-medium hover:underline">{l}</a>)}
           <Link to="/signin" className="btn btn-sm btn-outline">Sign in</Link>
+          {launched && <Link to="/signup" className="btn btn-sm btn-primary">Start free trial</Link>}
         </nav>
         <button className="md:hidden btn btn-ghost btn-square" aria-label="Menu" aria-expanded={open} aria-controls="mobile-menu" onClick={() => setOpen(!open)}>
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true">
@@ -35,6 +37,7 @@ function Header() {
         <nav id="mobile-menu" className="md:hidden border-t-2 border-(--line) bg-(--card) px-4 py-3 flex flex-col" aria-label="Main">
           {links.map(([h, l]) => <a key={h} href={h} onClick={() => setOpen(false)} className="py-3 font-medium border-b border-(--line-soft)">{l}</a>)}
           <Link to="/signin" className="py-3 font-medium">Sign in</Link>
+          {launched && <Link to="/signup" onClick={() => setOpen(false)} className="btn btn-primary mt-2">Start free trial</Link>}
         </nav>
       )}
     </header>
@@ -157,9 +160,22 @@ function EarlyAccess() {
   );
 }
 
+function TrialCta() {
+  const cfg = useConfig();
+  const days = cfg?.trialDays ?? 0;
+  return (
+    <div className="hard-card p-6 max-w-lg mx-auto text-center">
+      <h2 className="text-2xl font-bold">{days > 0 ? `Start your ${days}-day free trial` : "Get started"}</h2>
+      <p className="mt-2">{days > 0 ? "No card needed to start. Add your first quote in minutes." : "Create your account and choose a plan."}</p>
+      <Link to="/signup" className="btn btn-primary mt-5 text-base">{days > 0 ? "Start free trial" : "Create account"}</Link>
+      <p className="mt-3 text-sm">Already have an account? <Link className="link" to="/signin">Sign in</Link></p>
+    </div>
+  );
+}
+
 export default function Landing() {
   const cfg = useConfig();
-  useEffect(() => { document.title = `${cfg?.name ?? "QuoteMe"}: follow up quotes that go quiet`; }, [cfg]);
+  useEffect(() => { document.title = `${cfg?.name ?? "Quoted"}. Follow up quotes that go quiet`; }, [cfg]);
   return (
     <Shell header={<Header />} wide>
       <div className="mx-auto max-w-6xl px-4">
@@ -167,7 +183,7 @@ export default function Landing() {
           <div>
             <h1 className="text-4xl md:text-5xl font-extrabold leading-tight">Quotes go quiet. <span className="hl">The work shouldn't.</span></h1>
             <p className="mt-5 text-lg max-w-prose">Log a quote in about ten seconds. We send polite follow-ups in your name until the customer replies, and you see what is still waiting and what you have won.</p>
-            <a href="#access" className="btn btn-primary mt-6 text-base">Ask for early access</a>
+            {cfg?.launched ? <Link to="/signup" className="btn btn-primary mt-6 text-base">Start your free trial</Link> : <a href="#access" className="btn btn-primary mt-6 text-base">Ask for early access</a>}
           </div>
           <Demo />
         </section>
@@ -208,7 +224,7 @@ export default function Landing() {
                 <div key={p.id} className="hard-card p-6">
                   <h3 className="text-xl font-bold">{p.label}</h3>
                   <p className="mt-3 font-display font-extrabold text-4xl"><span className="hl">{money(Math.round(p.price * 100))}</span><span className="text-base font-medium"> / {p.interval}</span></p>
-                  <a href="#access" className="btn btn-primary mt-5">Ask for early access</a>
+                  {cfg.launched ? <Link to="/signup" className="btn btn-primary mt-5">Start free trial</Link> : <a href="#access" className="btn btn-primary mt-5">Ask for early access</a>}
                 </div>))}
             </div>
           </section>
@@ -220,13 +236,13 @@ export default function Landing() {
           <SampleEmail />
         </section>
 
-        <section className="py-8 md:py-12">
+        <section className={cfg?.launched ? "hidden" : "py-8 md:py-12"}>
           <div className="hard-card p-6 md:p-8 max-w-xl mx-auto text-center">
             <p className="font-medium">Founding member</p>
             <h2 className="text-3xl md:text-4xl font-extrabold mt-1"><span className="hl">Free for your first 3 months</span></h2>
             <ul className="mt-5 space-y-2 text-left max-w-sm mx-auto">
               {["Limited places while we are in early access", "No card needed", "Your feedback shapes what we build next", "Everything included, nothing locked"].map((t) => (
-                <li key={t} className="flex gap-2"><span aria-hidden="true" className="font-bold text-(--accent)">&#10003;</span><span>{t}</span></li>))}
+                <li key={t} className="flex gap-2"><span aria-hidden="true" className="font-bold text-(--accent-text)">&#10003;</span><span>{t}</span></li>))}
             </ul>
             <a href="#access" className="btn btn-primary mt-6 text-base">Ask for a place</a>
           </div>
@@ -242,7 +258,7 @@ export default function Landing() {
           </div>
         </section>
 
-        <section id="access" className="py-8 md:py-12 pb-14 scroll-mt-20"><EarlyAccess /></section>
+        <section id="access" className="py-8 md:py-12 pb-14 scroll-mt-20">{cfg?.launched ? <TrialCta /> : <EarlyAccess />}</section>
       </div>
     </Shell>
   );

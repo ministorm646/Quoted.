@@ -24,7 +24,7 @@ Resend only lets you send to anyone from a domain you own and have verified.
 ## B2. Company details (recommended before launch)
 
 In Vercel environment variables add, then redeploy:
-- COMPANY_NAME, COMPANY_NUMBER and COMPANY_ADDRESS: your registered company details. They appear in the footer, the privacy page and the bottom of QuoteMe's own emails. UK businesses that trade online are expected to show these.
+- COMPANY_NAME, COMPANY_NUMBER and COMPANY_ADDRESS: your registered company details. They appear in the footer, the privacy page and the bottom of Quoted's own emails. UK businesses that trade online are expected to show these.
 - SUPPORT_EMAIL: where customers write to you (the Contact page shows it). Defaults to FROM_EMAIL.
 
 Share previews: when someone pastes your site link into a chat or social post, it shows a card with the image in public/og-image.png. The site address comes from APP_URL (or Vercel's production address) at build time, so redeploy after setting APP_URL or adding a domain.
@@ -71,12 +71,29 @@ iPhone (Safari): Share, Add to Home Screen. Android (Chrome): menu, Install app 
 Nothing changes for anyone until you set BILLING_ENABLED to true.
 
 1. Sign up at lemonsqueezy.com and create a store. Live payments need their business verification, so start early.
-2. Create a product (for example QuoteMe) with two subscription variants: Monthly and Annual. The prices must match PRICE_MONTHLY and PRICE_ANNUAL in Vercel (default 19 and 190 pounds, change them to what you want).
+2. Create a product (for example Quoted) with two subscription variants: Monthly and Annual. The prices must match PRICE_MONTHLY and PRICE_ANNUAL in Vercel (default 19 and 190 pounds, change them to what you want).
 3. For each variant copy its checkout link and its variant id. Put the links in LS_CHECKOUT_MONTHLY and LS_CHECKOUT_ANNUAL, and the ids in LS_VARIANT_MONTHLY and LS_VARIANT_ANNUAL.
 4. Founding discount: create a discount code (for example FOUNDER30) for the percentage you want, applying to subscription renewals for as long as the person stays subscribed, limited to your product. Put the code in FOUNDING_DISCOUNT_CODE and the percentage in FOUNDING_DISCOUNT_PERCENT. Everyone approved during early access is a founding member and gets the code applied at checkout.
 5. Webhook: in Lemon Squeezy, Settings, Webhooks, add https://YOUR-DOMAIN/api/billing/webhook. Choose a long random signing secret, put the same value in LS_WEBHOOK_SECRET, and tick all the subscription events.
 6. Use Lemon Squeezy's test mode first. Sign in as a test account, open Plan and billing, choose a plan and pay with their test card. Within a few seconds the page should show "You're subscribed". Check the discount shows on the checkout page for a founding member.
 7. When you are ready, set BILLING_ENABLED to true and redeploy. From then on, businesses whose free period has ended cannot add quotes and are not followed up until they subscribe. They can still sign in, view and download everything.
+
+## I. Launch day (ending early access)
+
+This is the one-click switch. Do it when you are ready to charge.
+
+1. Finish sections B, C, D and H (domain, Resend, the timer, Lemon Squeezy), then add real Turnstile keys and your company details. Set DRY_RUN to false and redeploy.
+2. Sign in as the admin and open Admin, then Launch (YOUR-SITE/admin/launch). Every item marked "Needed" must show a tick. Fix any that don't in Vercel (Environment Variables), redeploy, and reload the page.
+3. Rehearse first if you like: set BILLING_ENABLED to true for a test account to see the paywall, then set it back.
+4. Type LAUNCH and press the button. What changes straight away, with no redeploy:
+   - The early-access form on the home page is replaced by a free-trial sign-up (the length is TRIAL_DAYS, 14 by default, 0 for none).
+   - Prices appear on the home page and the Plan page.
+   - Founding members (everyone approved during early access) keep their free period, then get their discount code at checkout.
+   - New customers get the trial, then pay full price.
+   - Anyone whose free period has ended cannot add quotes and is not followed up until they subscribe. They can still sign in, view and download everything.
+5. Press "Send the next 25" until it says everyone has been told. Each founding member gets one email: early access has ended, when their free period finishes, and their discounted price.
+6. Check it as a customer: in a private window sign up with a new email, follow the link, add a quote, then use the Plan page to subscribe (use Lemon Squeezy's test mode first).
+7. To undo: type REOPEN on the same page. Sign-up closes, the paywall turns off and the request form returns. Nothing is deleted.
 
 ## If something goes wrong
 

@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import type { HC } from "./types.js";
 import { guard, hit, readJson } from "./lib/security.js";
+import { billingOn, isLaunched } from "./launch.js";
 import { accessInfo, applyBillingEvent, checkoutUrl, foundingPercent, plans, verifySignature } from "./billing.js";
 
 export const billing = new Hono<HC>();
@@ -27,9 +28,10 @@ billing.get("/", guard, async (c) => {
   const b = await mine(c);
   if (!b) return c.json({ error: "No business found" }, 404);
   const founding = b.founding === 1;
+  const on = await billingOn(c.env);
   return c.json({
-    enabled: c.env.BILLING_ENABLED === "true",
-    access: accessInfo(b, c.env.BILLING_ENABLED === "true"),
+    enabled: on, launched: await isLaunched(c.env.DB),
+    access: accessInfo(b, on),
     founding, foundingPercent: founding ? foundingPercent(c.env) : 0,
     plan: b.plan, status: b.sub_status, renews: b.sub_renews_at?.slice(0, 10) ?? null,
     plans: plans(c.env, founding), portalUrl: b.portal_url ?? null,

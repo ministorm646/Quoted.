@@ -32,7 +32,7 @@ export default function Admin() {
     load();
   }
 
-  const nav2 = <><Link to="/admin/stats" className="btn btn-sm btn-outline">Stats</Link><Link to="/app" className="btn btn-sm btn-ghost">Back to app</Link></>;
+  const nav2 = <><Link to="/admin/stats" className="btn btn-sm btn-outline">Stats</Link><Link to="/admin/launch" className="btn btn-sm btn-outline">Launch</Link><Link to="/app" className="btn btn-sm btn-ghost">Back to app</Link></>;
   if (!me || !data) return <Shell nav={nav2}><span className="loading loading-spinner loading-lg" aria-label="Loading" /></Shell>;
   const count = (t: Tab) => data.items.filter((i) => i.status === t).length;
   const rows = data.items.filter((i) => i.status === tab);

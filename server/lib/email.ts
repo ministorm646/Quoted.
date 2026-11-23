@@ -39,20 +39,22 @@ export async function sendEmail(env: Env, m: Mail): Promise<SendResult> {
 }
 
 // Sign-in and invite emails (the only emails early-access people ever receive).
-export function signInEmail(env: Env, to: string, token: string, invite: boolean): Mail {
+export function signInEmail(env: Env, to: string, token: string, invite: boolean, welcome = false): Mail {
   const link = `${env.APP_URL.replace(/\/$/, "")}/verify?token=${encodeURIComponent(token)}`;
   const name = env.PRODUCT_NAME;
-  const lead = invite
+  const lead = welcome
+    ? `Welcome to ${name}. Use the button to confirm your email and get started. The link works once and lasts 60 minutes.`
+    : invite
     ? `You have a place in the ${name} early access. Use the button to sign in. The link works once and lasts 7 days.`
     : `Use the button to sign in to ${name}. The link works once and expires in 15 minutes.`;
   const text = `${lead}\n\n${link}\n\nIf you did not ask for this, you can ignore this email.`;
   const html = emailShell(env, `<p style="font-size:16px;line-height:1.5;margin:0 0 20px">${escapeHtml(lead)}</p>
-<p style="margin:0 0 20px"><a href="${escapeHtml(link)}" style="display:inline-block;background:#0E7A55;color:#ffffff;text-decoration:none;font-weight:bold;padding:14px 24px;border-radius:8px">Sign in</a></p>
-<p style="font-size:13px;line-height:1.5;color:#4a5b53;margin:0 0 8px">If the button does not work, paste this into your browser:<br>${escapeHtml(link)}</p>
-<p style="font-size:13px;color:#4a5b53;margin:0">If you did not ask for this, you can ignore this email.</p>`);
+<p style="margin:0 0 20px"><a href="${escapeHtml(link)}" style="display:inline-block;background:#2A3FFF;color:#ffffff;text-decoration:none;font-weight:bold;padding:14px 24px;border-radius:8px">Sign in</a></p>
+<p style="font-size:13px;line-height:1.5;color:#55555F;margin:0 0 8px">If the button does not work, paste this into your browser:<br>${escapeHtml(link)}</p>
+<p style="font-size:13px;color:#55555F;margin:0">If you did not ask for this, you can ignore this email.</p>`);
   return {
     to,
-    subject: invite ? `You're in: ${name} early access` : `Your ${name} sign-in link`,
+    subject: welcome ? `Welcome to ${name}.` : invite ? `You're in: ${name} early access` : `Your ${name} sign-in link`,
     text, html,
   };
 }

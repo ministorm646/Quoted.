@@ -14,7 +14,7 @@ export default function Shell({ children, nav, brandTo = "/", header, wide }: {
       {header ?? (
         <header className="border-b-2 border-(--line) bg-(--card) sticky top-0 z-10">
           <div className="mx-auto max-w-6xl px-4 h-16 flex items-center justify-between">
-            <Link to={brandTo} aria-label={`${cfg?.name ?? "QuoteMe"} home`}><Logo name={cfg?.name} /></Link>
+            <Link to={brandTo} aria-label={`${cfg?.name ?? "Quoted"} home`}><Logo name={cfg?.name} /></Link>
             <nav className="flex items-center gap-2">{nav ?? <Link to="/signin" className="btn btn-sm btn-outline">Sign in</Link>}</nav>
           </div>
         </header>
@@ -23,7 +23,7 @@ export default function Shell({ children, nav, brandTo = "/", header, wide }: {
       <footer className="border-t-2 border-(--line) bg-(--card)">
         <div className="mx-auto max-w-6xl px-4 py-6 text-sm grid gap-4 md:grid-cols-2">
           <div>
-            <p className="font-bold">{co?.name || cfg?.name || "QuoteMe"}</p>
+            <p className="font-bold">{co?.name || `${cfg?.name ?? "Quoted"}.`}</p>
             {co?.number && <p>Company number {co.number}</p>}
             {co?.address && <p>{co.address}</p>}
             <p className="mt-1">Made for small UK service businesses.</p>

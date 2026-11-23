@@ -1,12 +1,12 @@
 {
-  "name": "QuoteMe",
-  "short_name": "QuoteMe",
+  "name": "Quoted.",
+  "short_name": "Quoted.",
   "description": "Follow up quotes that go quiet",
   "start_url": "/app",
   "scope": "/",
   "display": "standalone",
-  "background_color": "#F4F6F3",
-  "theme_color": "#0E7A55",
+  "background_color": "#F7F6F2",
+  "theme_color": "#2A3FFF",
   "icons": [
     { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
     { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },

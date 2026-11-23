@@ -11,6 +11,7 @@ type S = {
   emails: { sent: number; testMode: number };
   wonAfterFollowUp: { count: number; pence: number };
   weekThree: { eligible: number; active: number };
+  subscriptions: { active: number; founding: number; standard: number; pastDue: number; cancelled: number; estMonthlyPence: number };
 };
 
 const Card = ({ label, value, sub }: { label: string; value: string | number; sub?: string }) => (
@@ -27,7 +28,7 @@ export default function AdminStats() {
     api<S>("/api/admin/stats").then((r) => (r.status === 403 ? nav("/app", { replace: true }) : r.ok && setS(r.data)));
   }, [me, nav]);
 
-  const shell = (c: React.ReactNode) => <Shell nav={<><Link to="/admin" className="btn btn-sm btn-outline">Requests</Link><Link to="/app" className="btn btn-sm btn-ghost">Back to app</Link></>}>{c}</Shell>;
+  const shell = (c: React.ReactNode) => <Shell nav={<><Link to="/admin" className="btn btn-sm btn-outline">Requests</Link><Link to="/admin/launch" className="btn btn-sm btn-outline">Launch</Link><Link to="/app" className="btn btn-sm btn-ghost">Back to app</Link></>}>{c}</Shell>;
   if (!s) return shell(<span className="loading loading-spinner loading-lg" aria-label="Loading" />);
   const max = Math.max(1, ...s.signupsPerWeek.map((w) => w.signups));
   const w3 = s.weekThree.eligible ? `${Math.round((s.weekThree.active / s.weekThree.eligible) * 100)}%` : "Not yet";
@@ -53,6 +54,14 @@ export default function AdminStats() {
         <Card label="Active (logged a quote)" value={s.users.active} sub={`of ${s.users.approved} approved`} />
         <Card label="3 or more quotes" value={s.users.threePlus} />
         <Card label="Active in week 3" value={w3} sub={`${s.weekThree.active} of ${s.weekThree.eligible} who joined 3+ weeks ago`} />
+      </div>
+
+      <h2 className="text-xl font-bold mt-8">Subscriptions</h2>
+      <div className="mt-3 grid gap-3 grid-cols-2 md:grid-cols-4">
+        <Card label="Subscribers" value={s.subscriptions.active} sub={`${s.subscriptions.founding} founding, ${s.subscriptions.standard} standard`} />
+        <Card label="Estimated monthly income" value={money(s.subscriptions.estMonthlyPence)} sub="From plan prices, before fees" />
+        <Card label="Payment overdue" value={s.subscriptions.pastDue} />
+        <Card label="Cancelled (still paid up)" value={s.subscriptions.cancelled} />
       </div>
 
       <h2 className="text-xl font-bold mt-8">Results</h2>
