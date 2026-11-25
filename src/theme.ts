@@ -1,11 +1,11 @@
 // Appearance: a light or dark mode plus an accent colour. Saved on this device straight away,
 // and on the account (see Settings) so it follows the person to other devices.
 export type Mode = "light" | "dark" | "system";
-type Palette = { name: string; light: string; hl: string; dark: string; darkContent: string; hlDark: string; hlSolid?: string };
-const YELLOW = "#FFE14D"; // the highlighter
+type Palette = { name: string; light: string; hl: string; dark: string; darkContent: string; hlDark: string; hlSolid?: string; text?: string; content?: string };
+const YELLOW = "#FFEB80"; // the highlighter (a softer yellow than the accent)
 
 export const PALETTES = {
-  signature: { name: "Quoted blue", light: "#2A3FFF", hl: YELLOW, dark: "#8E9BFF", darkContent: "#0B1033", hlDark: "rgba(255,225,77,0.30)" },
+  signature: { name: "Quoted yellow", light: "#FFD60A", text: "#12121A", content: "#12121A", hl: YELLOW, dark: "#FFD60A", darkContent: "#12121A", hlDark: "rgba(255,214,10,0.30)" },
   forest: { name: "Forest", light: "#0E7A55", hl: "#FFD84D", dark: "#34D399", darkContent: "#052E1F", hlDark: "rgba(255,216,77,0.32)" },
   ocean: { name: "Ocean", light: "#0E7490", hl: "#FFE08A", dark: "#22D3EE", darkContent: "#04323B", hlDark: "rgba(255,224,138,0.30)" },
   sunset: { name: "Sunset", light: "#C2410C", hl: "#FDE68A", dark: "#FB923C", darkContent: "#3B1503", hlDark: "rgba(253,230,138,0.30)" },
@@ -36,10 +36,12 @@ export function applyAppearance(a: Appearance) {
   const p = PALETTES[a.accent];
   const root = document.documentElement;
   const accent = dark ? p.dark : p.light;
-  const content = dark ? p.darkContent : "#ffffff";
+  const q = p as Palette;
+  const content = dark ? q.darkContent : (q.content ?? "#ffffff");
+  const text = dark ? q.dark : (q.text ?? q.light);
   root.dataset.theme = dark ? "nudge-dark" : "nudge";
   const set = (k: string, v: string) => root.style.setProperty(k, v);
-  set("--accent", accent); set("--accent-text", accent); set("--accent-content", content);
+  set("--accent", accent); set("--accent-text", text); set("--accent-content", content);
   set("--highlight", dark ? p.hlDark : p.hl); set("--highlight-solid", dark ? p.hlSolid : p.hl);
   set("--color-primary", accent); set("--color-primary-content", content);
   document.querySelector('meta[name="theme-color"]')?.setAttribute("content", dark ? "#0f0f10" : accent);

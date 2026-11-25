@@ -24,7 +24,7 @@ export function followupMail(env: Env, q: FollowupQuote, step: number): Mail {
   const paras = body.split(/\n{2,}/).map((p) =>
     `<p style="margin:0 0 16px;font-size:16px;line-height:1.5">${escapeHtml(p).replace(/\n/g, "<br>")}</p>`).join("");
   const html = `<div style="font-family:Arial,sans-serif;color:#12121A;max-width:480px;margin:0 auto;padding:24px">${paras}
-${btn(yes, "Yes, go ahead", "#2A3FFF", "#ffffff", "#2A3FFF")}${btn(ask, "I have a question", "#ffffff", "#12121A", "#12121A")}${btn(no, "Not interested", "#F7F6F2", "#12121A", "#D9D7D0")}
+${btn(yes, "Yes, go ahead", "#FFD60A", "#12121A", "#12121A")}${btn(ask, "I have a question", "#ffffff", "#12121A", "#12121A")}${btn(no, "Not interested", "#F7F6F2", "#12121A", "#D9D7D0")}
 <p style="margin:16px 0 0;font-size:16px">Kind regards,<br>${escapeHtml(q.bname)}</p>
 <p style="margin:24px 0 0;font-size:12px;color:#55555F">Sent by ${escapeHtml(q.bname)} using ${escapeHtml(product)}. Don't want these emails? <a href="${escapeHtml(unsub)}" style="color:#55555F">Unsubscribe</a></p></div>`;
 

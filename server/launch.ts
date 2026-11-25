@@ -121,8 +121,8 @@ export function launchMail(env: Env, r: Recipient): Mail {
     `Questions? Reply to this email or write to ${env.SUPPORT_EMAIL || env.FROM_EMAIL}.`,
     `Thanks again,\nThe ${product} team`,
   ];
-  const html = emailShell(env, `${lines.slice(0, 4).map((p) => `<p style="font-size:16px;line-height:1.5;margin:0 0 16px">${escapeHtml(p).replace(link, `<a href="${escapeHtml(link)}" style="color:#2A3FFF">${escapeHtml(link)}</a>`)}</p>`).join("")}
-<p style="margin:0 0 20px"><a href="${escapeHtml(link)}" style="display:inline-block;background:#2A3FFF;color:#ffffff;text-decoration:none;font-weight:bold;padding:14px 24px;border-radius:8px">See the plans</a></p>
+  const html = emailShell(env, `${lines.slice(0, 4).map((p) => `<p style="font-size:16px;line-height:1.5;margin:0 0 16px">${escapeHtml(p).replace(link, `<a href="${escapeHtml(link)}" style="color:#12121A;text-decoration:underline">${escapeHtml(link)}</a>`)}</p>`).join("")}
+<p style="margin:0 0 20px"><a href="${escapeHtml(link)}" style="display:inline-block;background:#FFD60A;color:#12121A;border:2px solid #12121A;text-decoration:none;font-weight:bold;padding:14px 24px;border-radius:8px">See the plans</a></p>
 ${lines.slice(4).map((p) => `<p style="font-size:16px;line-height:1.5;margin:0 0 12px">${escapeHtml(p).replace(/\n/g, "<br>")}</p>`).join("")}`);
   return { to: r.email, subject: `Early access has ended: your founding-member offer`, text: lines.join("\n\n"), html };
 }

@@ -10,11 +10,11 @@
   --color-base-200: #f7f6f2;
   --color-base-300: #e4e2dc;
   --color-base-content: #12121a;
-  --color-primary: #2a3fff;
-  --color-primary-content: #ffffff;
-  --color-secondary: #ffe14d;
+  --color-primary: #ffd60a;
+  --color-primary-content: #12121a;
+  --color-secondary: #ffeb80;
   --color-secondary-content: #12121a;
-  --color-accent: #ffe14d;
+  --color-accent: #ffeb80;
   --color-accent-content: #12121a;
   --color-neutral: #12121a;
   --color-neutral-content: #f7f6f2;
@@ -44,12 +44,12 @@
   --color-base-200: #0f0f10;
   --color-base-300: #2a2a2e;
   --color-base-content: #f2f2f3;
-  --color-primary: #8e9bff;
-  --color-primary-content: #0b1033;
-  --color-secondary: #ffe14d;
-  --color-secondary-content: #1a1500;
-  --color-accent: #ffe14d;
-  --color-accent-content: #1a1500;
+  --color-primary: #ffd60a;
+  --color-primary-content: #12121a;
+  --color-secondary: #ffd60a;
+  --color-secondary-content: #12121a;
+  --color-accent: #ffd60a;
+  --color-accent-content: #12121a;
   --color-neutral: #3f3f46;
   --color-neutral-content: #f2f2f3;
   --color-info: #60a5fa;
@@ -78,9 +78,10 @@
 /* Colours that follow the chosen mode and accent (set in theme.ts). */
 :root, [data-theme="nudge"] {
   --ink: #12121a; --paper: #f7f6f2; --card: #ffffff; --line: #12121a; --line-soft: #e4e2dc; --muted: #55555f; --shadow: #12121a;
-  --accent: #2a3fff; --accent-text: #2a3fff; --accent-content: #ffffff; --highlight: #ffe14d; --highlight-solid: #ffe14d;
+  --accent: #ffd60a; --accent-text: #12121a; --accent-content: #12121a; --highlight: #ffeb80; --highlight-solid: #ffeb80;
 }
 [data-theme="nudge-dark"] {
+  --accent: #ffd60a; --accent-text: #ffd60a; --accent-content: #12121a; --highlight: rgba(255,214,10,0.30); --highlight-solid: #ffd60a;
   --ink: #f2f2f3; --paper: #0f0f10; --card: #1a1a1c; --line: #3f3f46; --line-soft: #2a2a2e; --muted: #a1a1aa; --shadow: #000000;
 }
 html { background: var(--paper); }
@@ -88,7 +89,13 @@ body { font-family: var(--font-sans); color: var(--ink); background: var(--paper
 h1, h2, h3 { font-family: var(--font-display); letter-spacing: -0.01em; }
 .input, .select, .textarea { background-color: var(--card); color: var(--ink); border-color: var(--line); }
 .input::placeholder, .textarea::placeholder { color: var(--muted); opacity: 1; }
-.link { color: var(--accent-text); }
+.link { color: var(--accent-text); text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--accent); text-decoration-thickness: 2px; }
+
+/* Primary buttons: accent fill, ink outline, hard shadow. */
+.btn-primary { border: 2px solid var(--ink); box-shadow: 3px 3px 0 var(--shadow); transition: transform .08s, box-shadow .08s; }
+.btn-primary:hover { box-shadow: 4px 4px 0 var(--shadow); }
+.btn-primary:active { transform: translate(3px, 3px); box-shadow: 0 0 0 var(--shadow); }
+.btn-primary:disabled, .btn-primary.btn-disabled { box-shadow: none; }
 details > summary { cursor: pointer; }
 
 /* Key cards: 2px border with a hard offset shadow. */

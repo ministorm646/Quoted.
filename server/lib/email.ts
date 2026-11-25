@@ -49,7 +49,7 @@ export function signInEmail(env: Env, to: string, token: string, invite: boolean
     : `Use the button to sign in to ${name}. The link works once and expires in 15 minutes.`;
   const text = `${lead}\n\n${link}\n\nIf you did not ask for this, you can ignore this email.`;
   const html = emailShell(env, `<p style="font-size:16px;line-height:1.5;margin:0 0 20px">${escapeHtml(lead)}</p>
-<p style="margin:0 0 20px"><a href="${escapeHtml(link)}" style="display:inline-block;background:#2A3FFF;color:#ffffff;text-decoration:none;font-weight:bold;padding:14px 24px;border-radius:8px">Sign in</a></p>
+<p style="margin:0 0 20px"><a href="${escapeHtml(link)}" style="display:inline-block;background:#FFD60A;color:#12121A;border:2px solid #12121A;text-decoration:none;font-weight:bold;padding:14px 24px;border-radius:8px">Sign in</a></p>
 <p style="font-size:13px;line-height:1.5;color:#55555F;margin:0 0 8px">If the button does not work, paste this into your browser:<br>${escapeHtml(link)}</p>
 <p style="font-size:13px;color:#55555F;margin:0">If you did not ask for this, you can ignore this email.</p>`);
   return {
