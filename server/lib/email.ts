@@ -6,7 +6,17 @@ export type Mail = {
   to: string; subject: string; text: string; html: string;
   replyTo?: string; fromName?: string; headers?: Record<string, string>;
 };
-export type SendResult = { ok: boolean; dryRun?: boolean; error?: string };
+export type SendResult = { ok: boolean; dryRun?: boolean; error?: string; rateLimited?: boolean };
+
+// Resend's free plan allows 2 requests a second and 100 emails a day. Space real sends out a little
+// so a batch never trips the per-second limit.
+const GAP_MS = 600;
+let lastSendAt = 0;
+async function pace() {
+  const wait = lastSendAt + GAP_MS - Date.now();
+  lastSendAt = Math.max(Date.now(), lastSendAt + GAP_MS);
+  if (wait > 0) await new Promise((r) => setTimeout(r, wait));
+}
 
 export async function sendEmail(env: Env, m: Mail): Promise<SendResult> {
   const name = (m.fromName ?? env.PRODUCT_NAME).replace(/[<>"\r\n]/g, "").slice(0, 60);
@@ -17,6 +27,7 @@ export async function sendEmail(env: Env, m: Mail): Promise<SendResult> {
     return { ok: true, dryRun: true };
   }
   try {
+    await pace();
     const r = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: { Authorization: `Bearer ${env.RESEND_API_KEY}`, "Content-Type": "application/json" },
@@ -29,7 +40,8 @@ export async function sendEmail(env: Env, m: Mail): Promise<SendResult> {
     });
     if (!r.ok) {
       console.error("Resend failed", r.status, (await r.text()).slice(0, 300));
-      return { ok: false, error: `status ${r.status}` };
+      // 429 means the per-second or daily limit was hit. That is not the email's fault, so the caller should just wait.
+      return { ok: false, error: `status ${r.status}`, rateLimited: r.status === 429 };
     }
     return { ok: true };
   } catch (e) {
