@@ -35,7 +35,6 @@ export const SCHEMA: string[] = [
   sub_status TEXT NOT NULL DEFAULT 'none',
   sub_renews_at TEXT,
   provider_sub_id TEXT,
-  provider_customer_id TEXT,
   portal_url TEXT,
   sub_updated_at TEXT,
   launch_emailed_at TEXT
@@ -111,7 +110,7 @@ export const SCHEMA: string[] = [
 ];
 
 // Columns added after the first release. Run once per database (tracked in schema_meta).
-export const MIGRATION_VERSION = 3;
+export const MIGRATION_VERSION = 2;
 export const MIGRATIONS: [table: string, column: string, ddl: string][] = [
   ["users", "password_hash", "TEXT"],
   ["users", "password_set_at", "TEXT"],
@@ -125,5 +124,4 @@ export const MIGRATIONS: [table: string, column: string, ddl: string][] = [
   ["businesses", "portal_url", "TEXT"],
   ["businesses", "sub_updated_at", "TEXT"],
   ["businesses", "launch_emailed_at", "TEXT"],
-  ["businesses", "provider_customer_id", "TEXT"],
 ];

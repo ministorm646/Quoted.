@@ -22,11 +22,12 @@ export interface Env {
   PRICE_MONTHLY: string;
   PRICE_ANNUAL: string;
   FOUNDING_DISCOUNT_PERCENT: string;
-  STRIPE_SECRET_KEY: string;
-  STRIPE_WEBHOOK_SECRET: string;
-  STRIPE_PRICE_MONTHLY: string;
-  STRIPE_PRICE_ANNUAL: string;
-  STRIPE_COUPON_FOUNDING: string;
+  FOUNDING_DISCOUNT_CODE: string;
+  LS_CHECKOUT_MONTHLY: string;
+  LS_CHECKOUT_ANNUAL: string;
+  LS_VARIANT_MONTHLY: string;
+  LS_VARIANT_ANNUAL: string;
+  LS_WEBHOOK_SECRET: string;
   TRIAL_DAYS: string;
 }
 export type SessionUser = { id: string; email: string };

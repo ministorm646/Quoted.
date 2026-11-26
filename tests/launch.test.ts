@@ -8,10 +8,11 @@ import type { Mail } from "../server/lib/email.js";
 
 const READY = {
   APP_URL: "https://quoted.co.uk", ADMIN_EMAIL: "admin@x.co", FROM_EMAIL: "hello@quoted.co.uk", SUPPORT_EMAIL: "help@quoted.co.uk", PRODUCT_NAME: "Quoted",
-  PRICE_MONTHLY: "19", PRICE_ANNUAL: "190", FOUNDING_DISCOUNT_PERCENT: "30", STRIPE_COUPON_FOUNDING: "founder30",
-  STRIPE_SECRET_KEY: "sk_live_x", STRIPE_PRICE_MONTHLY: "price_m", STRIPE_PRICE_ANNUAL: "price_a", STRIPE_WEBHOOK_SECRET: "whsec_x", DRY_RUN: "false", RESEND_API_KEY: "re_x",
+  PRICE_MONTHLY: "19", PRICE_ANNUAL: "190", FOUNDING_DISCOUNT_PERCENT: "30", FOUNDING_DISCOUNT_CODE: "FOUNDER30",
+  LS_CHECKOUT_MONTHLY: "https://s.lemonsqueezy.com/checkout/buy/a", LS_CHECKOUT_ANNUAL: "https://s.lemonsqueezy.com/checkout/buy/b",
+  LS_VARIANT_MONTHLY: "1", LS_VARIANT_ANNUAL: "2", LS_WEBHOOK_SECRET: "0123456789abcdef-secret", DRY_RUN: "false", RESEND_API_KEY: "re_x",
   CRON_SECRET: "0123456789abcdef-cron", TURNSTILE_SITE_KEY: "0x4AAAA-real", COMPANY_NAME: "Quoted Ltd", COMPANY_NUMBER: "12345678", COMPANY_ADDRESS: "1 High St, Birmingham",
-  BILLING_ENABLED: "false", TRIAL_DAYS: "14", DAILY_SEND_CAP: "60",
+  BILLING_ENABLED: "false", TRIAL_DAYS: "14", DAILY_SEND_CAP: "80",
 };
 const mk = (o: Record<string, string> = {}) => { const DB = memoryDb(); return { DB, env: { ...READY, DB, ...o } as unknown as Env }; };
 const NOW = new Date("2026-12-01T10:00:00Z");
@@ -27,27 +28,26 @@ test("launch flag: off by default, on after launch, off again after reopening; e
 test("readiness: a fully set up site can launch", () => { assert.deepEqual(launchBlockers(readiness(mk().env)), []); });
 test("readiness: each missing piece blocks launch, with a plain reason", () => {
   const blocked = (o: Record<string, string>) => launchBlockers(readiness(mk(o).env)).map((c) => c.key);
-  assert.deepEqual(blocked({ STRIPE_PRICE_MONTHLY: "" }), ["monthly"]);
+  assert.deepEqual(blocked({ LS_CHECKOUT_MONTHLY: "" }), ["monthly"]);
   assert.deepEqual(blocked({ PRICE_MONTHLY: "" }), ["monthly"]);
-  assert.deepEqual(blocked({ STRIPE_WEBHOOK_SECRET: "short" }), ["webhook"]);
-  assert.deepEqual(blocked({ STRIPE_COUPON_FOUNDING: "" }), ["founding"]);
-  assert.deepEqual(blocked({ STRIPE_COUPON_FOUNDING: "", FOUNDING_DISCOUNT_PERCENT: "0" }), []);
+  assert.deepEqual(blocked({ LS_WEBHOOK_SECRET: "short" }), ["webhook"]);
+  assert.deepEqual(blocked({ FOUNDING_DISCOUNT_CODE: "" }), ["founding"]);
+  assert.deepEqual(blocked({ FOUNDING_DISCOUNT_CODE: "", FOUNDING_DISCOUNT_PERCENT: "0" }), []);
   assert.deepEqual(blocked({ DRY_RUN: "true" }), ["emails"]);
   assert.deepEqual(blocked({ RESEND_API_KEY: "" }), ["emails"]);
   assert.deepEqual(blocked({ CRON_SECRET: "" }), ["cron"]);
   assert.deepEqual(blocked({ TURNSTILE_SITE_KEY: "1x00000000000000000000AA" }), ["turnstile"]);
-  assert.deepEqual(blocked({ STRIPE_SECRET_KEY: "sk_test_x" }), ["stripe"]);
-  assert.deepEqual(blocked({ STRIPE_SECRET_KEY: "" }), ["stripe"]);
+  assert.deepEqual(blocked({ LS_CHECKOUT_MONTHLY: "http://insecure.example/x" }), ["monthly"]);
 });
 test("readiness: annual can be switched off, but a priced annual plan needs a checkout link", () => {
   const blocked = (o: Record<string, string>) => launchBlockers(readiness(mk(o).env)).map((c) => c.key);
-  assert.deepEqual(blocked({ PRICE_ANNUAL: "", STRIPE_PRICE_ANNUAL: "" }), []);
-  assert.deepEqual(blocked({ STRIPE_PRICE_ANNUAL: "" }), ["annual"]);
+  assert.deepEqual(blocked({ PRICE_ANNUAL: "", LS_CHECKOUT_ANNUAL: "" }), []);
+  assert.deepEqual(blocked({ LS_CHECKOUT_ANNUAL: "" }), ["annual"]);
 });
-test("readiness: company details and a custom domain are advice, not blockers", () => {
-  const checks = readiness(mk({ COMPANY_NAME: "", APP_URL: "https://x.vercel.app" }).env);
+test("readiness: company details, plan ids and a custom domain are advice, not blockers", () => {
+  const checks = readiness(mk({ COMPANY_NAME: "", LS_VARIANT_MONTHLY: "", APP_URL: "https://x.vercel.app" }).env);
   assert.deepEqual(launchBlockers(checks), []);
-  assert.deepEqual(checks.filter((c) => !c.ok).map((c) => c.key).sort(), ["company", "domain"]);
+  assert.deepEqual(checks.filter((c) => !c.ok).map((c) => c.key).sort(), ["company", "domain", "variants"]);
 });
 
 test("new customers after launch: free trial, not founding, and the same address is never made twice", async () => {

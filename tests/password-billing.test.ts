@@ -4,15 +4,15 @@ import { createHmac } from "node:crypto";
 import { DatabaseSync } from "node:sqlite";
 import { memoryDb } from "./sqlite-db.js";
 import { hashPassword, verifyPassword, checkPassword } from "../server/lib/password.js";
-import { accessInfo, plans, checkoutParams, verifySignature, applyBillingEvent, stripeReady } from "../server/billing.js";
+import { accessInfo, plans, checkoutUrl, verifySignature, applyBillingEvent } from "../server/billing.js";
 import { runScheduler } from "../server/scheduler.js";
 import { MIGRATIONS } from "../server/schema.js";
 import type { Env } from "../server/types.js";
 
 const NOW = new Date("2026-12-01T10:00:00Z");
 const base = (o: Partial<Env> = {}) => ({ APP_URL: "https://t.example", FOUNDING_DISCOUNT_PERCENT: "30", PRICE_MONTHLY: "19", PRICE_ANNUAL: "190",
-  STRIPE_SECRET_KEY: "sk_test_x", STRIPE_PRICE_MONTHLY: "price_m", STRIPE_PRICE_ANNUAL: "price_a", STRIPE_COUPON_FOUNDING: "founder30", STRIPE_WEBHOOK_SECRET: "whsec_test",
-  ...o }) as Env;
+  FOUNDING_DISCOUNT_CODE: "FOUNDER30", LS_CHECKOUT_MONTHLY: "https://shop.lemonsqueezy.com/checkout/buy/abc", LS_CHECKOUT_ANNUAL: "https://shop.lemonsqueezy.com/checkout/buy/def",
+  LS_VARIANT_MONTHLY: "111", LS_VARIANT_ANNUAL: "222", LS_WEBHOOK_SECRET: "lemon-test-secret", ...o }) as Env;
 
 // ---------- passwords ----------
 test("password: right one works, wrong one and unknown account do not, and only a salted hash is stored", async () => {
@@ -58,36 +58,25 @@ test("founding members get the discount on every plan, others pay full price", (
   assert.deepEqual(plans(base({ PRICE_ANNUAL: "" }), true).map((p) => p.id), ["monthly"]); // no price set, no plan shown
   assert.equal(plans(base({ FOUNDING_DISCOUNT_PERCENT: "0" }), true)[0].foundingPrice, null);
 });
-test("checkout: price, business and (for founders only) the founding coupon", () => {
-  const p = checkoutParams(base(), "monthly", "me@x.co", "biz1", true, null)!;
-  assert.equal(p.mode, "subscription"); assert.equal(p["line_items[0][price]"], "price_m"); assert.equal(p.customer_email, "me@x.co");
-  assert.equal(p["subscription_data[metadata][business_id]"], "biz1"); assert.equal(p["discounts[0][coupon]"], "founder30");
-  assert.equal(p.success_url, "https://t.example/app/billing?paid=1");
-  assert.equal(checkoutParams(base(), "annual", "me@x.co", "biz1", false, null)!["discounts[0][coupon]"], undefined);
-  const again = checkoutParams(base(), "monthly", "me@x.co", "biz1", false, "cus_1")!; // returning customer reuses their Stripe customer
-  assert.equal(again.customer, "cus_1"); assert.equal(again.customer_email, undefined);
-  assert.equal(checkoutParams(base(), "weekly", "me@x.co", "b", true, null), null);
-  assert.equal(checkoutParams(base({ STRIPE_PRICE_MONTHLY: "" }), "monthly", "m@x.co", "b", true, null), null);
-});
-test("stripe stays off until a key is set", () => {
-  assert.equal(stripeReady(base({ STRIPE_SECRET_KEY: "" })), false);
-  assert.equal(stripeReady(base({ STRIPE_SECRET_KEY: "nonsense" })), false);
-  assert.equal(stripeReady(base()), true);
+test("checkout link: email, business and (for founders only) the discount code", () => {
+  const u = new URL(checkoutUrl(base(), "monthly", "me@x.co", "biz1", true)!);
+  assert.equal(u.searchParams.get("checkout[email]"), "me@x.co"); assert.equal(u.searchParams.get("checkout[custom][business_id]"), "biz1");
+  assert.equal(u.searchParams.get("checkout[discount_code]"), "FOUNDER30");
+  assert.equal(new URL(checkoutUrl(base(), "annual", "me@x.co", "biz1", false)!).searchParams.get("checkout[discount_code]"), null);
+  assert.equal(checkoutUrl(base(), "weekly", "me@x.co", "b", true), null);
+  assert.equal(checkoutUrl(base({ LS_CHECKOUT_MONTHLY: "http://insecure.example/x" }), "monthly", "m@x.co", "b", true), null);
+  assert.equal(checkoutUrl(base({ LS_CHECKOUT_MONTHLY: "" }), "monthly", "m@x.co", "b", true), null);
 });
 
 // ---------- webhook ----------
-test("webhook signature: only the exact signed body, signed recently, is accepted", async () => {
-  const body = '{"type":"customer.subscription.created"}', now = 1_800_000_000;
-  const sign = (secret: string, t: number, b = body) => createHmac("sha256", secret).update(`${t}.${b}`).digest("hex");
-  const hdr = `t=${now},v1=${sign("whsec_test", now)}`;
-  assert.equal(await verifySignature("whsec_test", body, hdr, now), true);
-  assert.equal(await verifySignature("whsec_test", body, `t=${now},v1=bad,v1=${sign("whsec_test", now)}`, now), true); // any v1 may match
-  assert.equal(await verifySignature("whsec_test", body + " ", hdr, now), false);
-  assert.equal(await verifySignature("other", body, hdr, now), false);
-  assert.equal(await verifySignature("whsec_test", body, hdr, now + 301), false); // too old, blocks replays
-  assert.equal(await verifySignature("whsec_test", body, undefined, now), false);
-  assert.equal(await verifySignature("", body, hdr, now), false);
-  assert.equal(await verifySignature("whsec_test", body, `v1=${sign("whsec_test", now)}`, now), false); // no timestamp
+test("webhook signature: only the exact signed body is accepted", async () => {
+  const body = '{"meta":{"event_name":"subscription_created"}}';
+  const sig = createHmac("sha256", "lemon-test-secret").update(body).digest("hex");
+  assert.equal(await verifySignature("lemon-test-secret", body, sig), true);
+  assert.equal(await verifySignature("lemon-test-secret", body + " ", sig), false);
+  assert.equal(await verifySignature("other-secret", body, sig), false);
+  assert.equal(await verifySignature("lemon-test-secret", body, undefined), false);
+  assert.equal(await verifySignature("", body, sig), false);
 });
 async function withBusiness(extra = "") {
   const DB = memoryDb(); const env = base({ DB } as any);
@@ -95,44 +84,40 @@ async function withBusiness(extra = "") {
   await DB.prepare(`INSERT INTO businesses (id,user_id,name,reply_to,free_until,referral_code,created_at,founding${extra ? "," + extra.split("=")[0] : ""}) VALUES ('b1','u1','Biz','o@x.co','2026-01-01','ABCD2345','2026-01-01T00:00:00Z',1${extra ? "," + extra.split("=")[1] : ""})`).run();
   return { DB, env };
 }
-const T = (iso: string) => Math.floor(Date.parse(iso) / 1000);
-const ev = (type: string, status: string, created: string, extra: object = {}) => ({
-  type, created: T(created),
-  data: { object: { id: "sub9", customer: "cus9", status, metadata: { business_id: "b1" }, cancel_at_period_end: false, current_period_end: T("2027-01-05T00:00:00Z"),
-    items: { data: [{ price: { id: "price_m" } }] }, ...extra } } });
-const row = (DB: any) => DB.prepare("SELECT sub_status, plan, sub_renews_at, provider_sub_id, provider_customer_id FROM businesses WHERE id='b1'").first();
+const ev = (name: string, status: string, updated: string, extra: object = {}) => ({
+  meta: { event_name: name, custom_data: { business_id: "b1" } },
+  data: { id: "sub9", attributes: { status, variant_id: 111, renews_at: "2027-01-05T00:00:00Z", ends_at: null, updated_at: updated, urls: { customer_portal: "https://portal.example/p" }, ...extra } } });
+const row = (DB: any) => DB.prepare("SELECT sub_status, plan, sub_renews_at, provider_sub_id, portal_url FROM businesses WHERE id='b1'").first();
 
-test("webhook: a new subscription is recorded with plan, renewal date and customer", async () => {
+test("webhook: a new subscription is recorded with plan, renewal date and billing portal link", async () => {
   const { DB, env } = await withBusiness();
-  assert.deepEqual(await applyBillingEvent(DB, env, ev("customer.subscription.created", "active", "2026-12-01T09:00:00Z")), { applied: true });
-  assert.deepEqual({ ...(await row(DB)) }, { sub_status: "active", plan: "monthly", sub_renews_at: "2027-01-05T00:00:00.000Z", provider_sub_id: "sub9", provider_customer_id: "cus9" });
+  assert.deepEqual(await applyBillingEvent(DB, env, ev("subscription_created", "active", "2026-12-01T09:00:00Z")), { applied: true });
+  assert.deepEqual({ ...(await row(DB)) }, { sub_status: "active", plan: "monthly", sub_renews_at: "2027-01-05T00:00:00Z", provider_sub_id: "sub9", portal_url: "https://portal.example/p" });
 });
-test("webhook: cancelling keeps access to the end of the period, older events never overwrite newer ones", async () => {
+test("webhook: older events never overwrite newer ones; cancelled keeps access until the end date", async () => {
   const { DB, env } = await withBusiness();
-  await applyBillingEvent(DB, env, ev("customer.subscription.updated", "active", "2026-12-01T09:00:00Z"));
-  await applyBillingEvent(DB, env, ev("customer.subscription.updated", "active", "2026-12-02T09:00:00Z", { cancel_at_period_end: true }));
-  assert.equal((await row(DB)).sub_status, "cancelled"); assert.equal((await row(DB)).sub_renews_at, "2027-01-05T00:00:00.000Z");
-  const r = await applyBillingEvent(DB, env, ev("customer.subscription.updated", "active", "2026-12-01T09:30:00Z")); // arrives late
+  await applyBillingEvent(DB, env, ev("subscription_updated", "active", "2026-12-01T09:00:00Z"));
+  const cancel = ev("subscription_cancelled", "cancelled", "2026-12-02T09:00:00Z", { ends_at: "2027-01-05T00:00:00Z", renews_at: null });
+  await applyBillingEvent(DB, env, cancel);
+  assert.equal((await row(DB)).sub_status, "cancelled"); assert.equal((await row(DB)).sub_renews_at, "2027-01-05T00:00:00Z");
+  const r = await applyBillingEvent(DB, env, ev("subscription_updated", "active", "2026-12-01T09:30:00Z")); // arrives late
   assert.equal(r.applied, false); assert.equal((await row(DB)).sub_status, "cancelled");
-  await applyBillingEvent(DB, env, ev("customer.subscription.updated", "active", "2026-12-03T09:00:00Z")); // resumed
+  await applyBillingEvent(DB, env, ev("subscription_resumed", "active", "2026-12-03T09:00:00Z"));
   assert.equal((await row(DB)).sub_status, "active");
-  await applyBillingEvent(DB, env, ev("customer.subscription.deleted", "canceled", "2026-12-04T09:00:00Z", { ended_at: T("2026-12-04T09:00:00Z") }));
-  assert.equal((await row(DB)).sub_status, "cancelled"); assert.equal((await row(DB)).sub_renews_at, "2026-12-04T09:00:00.000Z");
 });
-test("webhook: failed payments, other, unknown and malformed events are ignored safely", async () => {
+test("webhook: payment, order, unknown and malformed events are ignored safely", async () => {
   const { DB, env } = await withBusiness();
-  for (const p of [{ ...ev("invoice.payment_failed", "active", "2026-12-01T09:00:00Z") }, { type: "checkout.session.completed" },
-    ev("customer.subscription.updated", "incomplete", "2026-12-01T09:00:00Z"),
-    { type: "customer.subscription.created", data: { object: { id: "s", status: "active" } } }, {}, null])
+  for (const p of [ev("subscription_payment_success", "active", "2026-12-01T09:00:00Z"), { meta: { event_name: "order_created" } }, ev("subscription_updated", "mystery", "2026-12-01T09:00:00Z"),
+    { meta: { event_name: "subscription_created" }, data: { attributes: { status: "active" } } }, {}, null])
     assert.equal((await applyBillingEvent(DB, env, p)).applied, false);
   assert.equal((await row(DB)).sub_status, "none");
-  const wrong = ev("customer.subscription.created", "active", "2026-12-01T09:00:00Z"); (wrong.data.object.metadata as any).business_id = "nope";
+  const wrong = ev("subscription_created", "active", "2026-12-01T09:00:00Z"); (wrong.meta.custom_data as any).business_id = "nope";
   assert.equal((await applyBillingEvent(DB, env, wrong)).applied, false);
 });
-test("webhook: past due and the annual price are recognised", async () => {
+test("webhook: annual variant is recognised", async () => {
   const { DB, env } = await withBusiness();
-  await applyBillingEvent(DB, env, ev("customer.subscription.created", "past_due", "2026-12-01T09:00:00Z", { items: { data: [{ price: { id: "price_a" } }] } }));
-  assert.equal((await row(DB)).plan, "annual"); assert.equal((await row(DB)).sub_status, "past_due");
+  await applyBillingEvent(DB, env, ev("subscription_created", "active", "2026-12-01T09:00:00Z", { variant_id: 222 }));
+  assert.equal((await row(DB)).plan, "annual");
 });
 
 // ---------- scheduler respects billing ----------

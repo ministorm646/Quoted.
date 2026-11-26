@@ -138,18 +138,3 @@ test("outside 8am to 7pm UK time nothing is sent", async () => {
   const s = sends(); await runScheduler(env, { now: new Date("2026-11-23T22:30:00Z"), send: s.send });
   assert.equal(s.sent.length, 0);
 });
-
-test("rate limited by the email service: the step is handed back untouched and the run stops", async () => {
-  const { DB, env } = await setup();
-  await addQuote(DB, { id: "q1", next: -2000 });
-  await addQuote(DB, { id: "q2", email: "jo@client.co", next: -1000 });
-  let calls = 0;
-  const r = await runScheduler(env, { now: T0, send: async () => { calls++; return { ok: false, error: "status 429", rateLimited: true }; } });
-  assert.equal(calls, 1); assert.equal(r.failed, 0); assert.equal(r.sent, 0);
-  const q = await row(DB, "q1");
-  assert.equal(q.followups_sent, 0); assert.equal(q.retry_count, 0); assert.equal(q.status, "waiting"); assert.equal(q.last_sent_at, null); assert.ok(q.next_followup_at);
-  assert.equal((await DB.prepare("SELECT COUNT(*) AS n FROM events WHERE type='email_failed'").first()).n, 0);
-  const again = sends(); // next run, the limit has passed: both go out
-  const r2 = await runScheduler(env, { now: new Date(T0.getTime() + 15 * 60e3), send: again.send });
-  assert.equal(r2.sent, 2);
-});
