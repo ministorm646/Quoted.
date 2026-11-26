@@ -6,7 +6,7 @@ import { money } from "../lib";
 
 type B = {
   enabled: boolean; access: Access; founding: boolean; foundingPercent: number; plan: string | null; status: string; renews: string | null;
-  plans: PlanInfo[]; portalUrl: string | null; canCheckout: boolean;
+  plans: PlanInfo[]; hasPortal: boolean; canCheckout: boolean;
 };
 const gbp = (n: number) => money(Math.round(n * 100));
 
@@ -20,6 +20,13 @@ function View() {
   async function choose(plan: string) {
     setBusy(plan); setError("");
     const r = await api<{ url?: string; error?: string }>("/api/billing/checkout", { body: { plan } });
+    if (r.ok && r.data.url) { window.location.href = r.data.url; return; }
+    setBusy(""); setError(r.data?.error ?? "Something went wrong. Please try again.");
+  }
+
+  async function openPortal() {
+    setBusy("portal"); setError("");
+    const r = await api<{ url?: string; error?: string }>("/api/billing/portal", { body: {} });
     if (r.ok && r.data.url) { window.location.href = r.data.url; return; }
     setBusy(""); setError(r.data?.error ?? "Something went wrong. Please try again.");
   }
@@ -46,7 +53,8 @@ function View() {
           <p className="mt-2 text-lg">{detail}</p>
           {b.founding && <p className="mt-3"><span className="badge badge-success">Founding member</span> {b.foundingPercent > 0 && <span className="ml-1">{b.foundingPercent}% off while you stay subscribed.</span>}</p>}
           {!b.enabled && <p className="mt-4 text-sm">Paid plans haven't started yet. We will tell you well before anything changes, and you won't be charged without choosing a plan.</p>}
-          {b.portalUrl && subscribed && <a className="btn btn-outline mt-5" href={b.portalUrl} target="_blank" rel="noopener noreferrer">Manage billing and invoices</a>}
+          {b.hasPortal && subscribed && <button className="btn btn-outline mt-5" onClick={openPortal} disabled={busy === "portal"}>Manage billing and invoices</button>}
+          {error && subscribed && <p role="alert" className="mt-3 text-error font-medium">{error}</p>}
         </section>
         <aside className="panel p-5 self-start">
           <h2 className="font-bold text-lg">Every plan includes</h2>

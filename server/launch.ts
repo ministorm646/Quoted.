@@ -42,26 +42,25 @@ export type Check = { key: string; label: string; ok: boolean; required: boolean
 
 export function readiness(env: Env): Check[] {
   const priced = (v: string) => Number(v) > 0;
-  const https = (v: string) => { try { return new URL(v).protocol === "https:"; } catch { return false; } };
-  const planOk = (price: string, link: string) => !priced(price) || https(link); // a plan that is priced must be purchasable
+  const planOk = (price: string, id: string) => !priced(price) || id.startsWith("price_"); // a plan that is priced must be purchasable
   const pct = foundingPercent(env);
   return [
-    { key: "monthly", required: true, ok: priced(env.PRICE_MONTHLY) && https(env.LS_CHECKOUT_MONTHLY), label: "Monthly plan is set up",
-      hint: "Set PRICE_MONTHLY and LS_CHECKOUT_MONTHLY (the checkout link from Lemon Squeezy)." },
-    { key: "annual", required: true, ok: planOk(env.PRICE_ANNUAL, env.LS_CHECKOUT_ANNUAL), label: "Annual plan is set up, or switched off",
-      hint: "Set LS_CHECKOUT_ANNUAL, or clear PRICE_ANNUAL to hide the annual plan." },
-    { key: "webhook", required: true, ok: env.LS_WEBHOOK_SECRET.length >= 16, label: "Payment webhook secret is set",
-      hint: "Set LS_WEBHOOK_SECRET (16+ characters) and add the same secret to the webhook in Lemon Squeezy." },
-    { key: "founding", required: true, ok: pct === 0 || env.FOUNDING_DISCOUNT_CODE.length > 0, label: "Founding discount code is set",
-      hint: "Create the discount code in Lemon Squeezy and set FOUNDING_DISCOUNT_CODE, or set FOUNDING_DISCOUNT_PERCENT to 0." },
+    { key: "stripe", required: true, ok: /^(sk|rk)_live_/.test(env.STRIPE_SECRET_KEY), label: "Stripe is connected in live mode",
+      hint: "Set STRIPE_SECRET_KEY to your live secret key (sk_live_...). Test keys do not count." },
+    { key: "monthly", required: true, ok: priced(env.PRICE_MONTHLY) && env.STRIPE_PRICE_MONTHLY.startsWith("price_"), label: "Monthly plan is set up",
+      hint: "Set PRICE_MONTHLY and STRIPE_PRICE_MONTHLY (the price id from Stripe, starting price_)." },
+    { key: "annual", required: true, ok: planOk(env.PRICE_ANNUAL, env.STRIPE_PRICE_ANNUAL), label: "Annual plan is set up, or switched off",
+      hint: "Set STRIPE_PRICE_ANNUAL, or clear PRICE_ANNUAL to hide the annual plan." },
+    { key: "webhook", required: true, ok: env.STRIPE_WEBHOOK_SECRET.startsWith("whsec_"), label: "Payment webhook secret is set",
+      hint: "Set STRIPE_WEBHOOK_SECRET (starts whsec_) from the webhook endpoint in Stripe." },
+    { key: "founding", required: true, ok: pct === 0 || env.STRIPE_COUPON_FOUNDING.length > 0, label: "Founding discount coupon is set",
+      hint: "Create the coupon in Stripe and set STRIPE_COUPON_FOUNDING to its id, or set FOUNDING_DISCOUNT_PERCENT to 0." },
     { key: "emails", required: true, ok: env.DRY_RUN === "false" && env.RESEND_API_KEY.length > 0, label: "Real emails are switched on",
       hint: "Set RESEND_API_KEY and DRY_RUN=false. New customers get their sign-in link by email." },
     { key: "cron", required: true, ok: env.CRON_SECRET.length >= 16, label: "Follow-up timer is set up",
       hint: "Set CRON_SECRET and add the 15-minute timer (see the setup guide)." },
     { key: "turnstile", required: true, ok: !env.TURNSTILE_SITE_KEY.startsWith("1x0000"), label: "Real bot check keys",
       hint: "You are using Cloudflare's test keys, which let bots through. Create real Turnstile keys." },
-    { key: "variants", required: false, ok: !!env.LS_VARIANT_MONTHLY && (!priced(env.PRICE_ANNUAL) || !!env.LS_VARIANT_ANNUAL), label: "Plan ids are set",
-      hint: "Set LS_VARIANT_MONTHLY and LS_VARIANT_ANNUAL so the app shows which plan someone is on." },
     { key: "company", required: false, ok: !!(env.COMPANY_NAME && env.COMPANY_NUMBER && env.COMPANY_ADDRESS), label: "Company details are set",
       hint: "Set COMPANY_NAME, COMPANY_NUMBER and COMPANY_ADDRESS. They show in the footer and legal pages." },
     { key: "domain", required: false, ok: !env.APP_URL.includes("vercel.app"), label: "Your own domain is in use",

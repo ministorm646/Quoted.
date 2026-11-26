@@ -44,7 +44,7 @@ export async function runScheduler(
   if (!opts.anyTime && !inSendingHours(now)) return out;
 
   const dayStart = iso.slice(0, 10) + "T00:00:00.000Z";
-  const globalCap = parseInt(env.DAILY_SEND_CAP, 10) || 80;
+  const globalCap = parseInt(env.DAILY_SEND_CAP, 10) || 60; // Resend's free plan is 100 a day in total, sign-in emails included
   let sentToday = (await env.DB.prepare(`SELECT COUNT(*) AS n FROM events WHERE type IN ${COUNTED} AND created_at >= ?`)
     .bind(dayStart).first<{ n: number }>())?.n ?? 0;
 
@@ -107,6 +107,16 @@ export async function runScheduler(
     let result: SendResult;
     try { result = await send(followupMail(env, q, step)); }
     catch (e) { result = { ok: false, error: String(e) }; }
+
+    if (result.rateLimited) {
+      // The email service said slow down. Hand the step back untouched (no failed try counted) and stop this run.
+      await env.DB.prepare(
+        `UPDATE quotes SET followups_sent=?, last_sent_at=?, status=?, next_followup_at=?, updated_at=?
+         WHERE id=? AND followups_sent=? AND status='following_up'`,
+      ).bind(q.followups_sent, q.last_sent_at, q.status, iso, iso, q.id, step).run();
+      out.skipped++;
+      break;
+    }
 
     if (result.ok) {
       const nextDays = steps[step];
